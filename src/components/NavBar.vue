@@ -1,5 +1,7 @@
 <script setup>
+import {router} from "../router/index.js";
 
+//console.log(this.route.query.params)
 </script>
 
 <template>
@@ -8,18 +10,26 @@
     <h1 class="mx-4">File Host</h1>
     
     <ul class="md:flex md:items-center text-lg">
-      <li class="md:mx-4 hover:bg-slate-850 px-1.5 py-0.5">
-        Home
+      <li class="rounded-lg md:mx-4 hover:bg-white hover:bg-opacity-10 px-3 py-1">
+        Root
       </li>
-      <p>></p>
-      <li class="md:mx-4 hover:text-teal-200">
-        About
+
+      <i class="text-white text-xl bi bi-chevron-right"></i>
+
+      <li class="rounded-lg md:mx-4 hover:bg-white hover:bg-opacity-10 px-3 py-1">
+        Thing
       </li>
-      <li class="md:mx-4 hover:text-teal-200">
-        Test
+
+      <i class="text-white text-xl bi bi-chevron-right"></i>
+
+      <li class="rounded-lg md:mx-4 hover:bg-white hover:bg-opacity-10 px-3 py-1">
+        Thing
       </li>
-      <li class="md:mx-4 hover:text-teal-200">
-        Cheese
+
+      <i class="text-white text-xl bi bi-chevron-right"></i>
+
+      <li class="rounded-lg md:mx-4 hover:bg-white hover:bg-opacity-10 px-3 py-1">
+        Thing
       </li>
     </ul>
   </div>

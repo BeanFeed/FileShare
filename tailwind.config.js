@@ -8,7 +8,8 @@ export default {
     extend: {
       colors:{
         slate:{
-          850: "#090F21"
+          850: "#090F21",
+          "900-light": "#878B95"
         }
       }
     },
