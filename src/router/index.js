@@ -1,5 +1,6 @@
 import Home from "../views/Home.vue";
 import {createRouter, createWebHistory} from "vue-router";
+import Explorer from "../views/Explorer.vue";
 
 
 const routes = [
@@ -9,11 +10,20 @@ const routes = [
     },
     {
         path:"/Home",
-        component: Home
+        component: Home,
+        name: "Home"
     },
     {
-        path:"/Explorer/:Directory?",
-        component: Home
+        path:"/Explorer",
+        component: Explorer,
+        name: "Explorer",
+        children: [
+            {
+                path: ":Directory+",
+                component: Explorer,
+                name: "Explorer"
+            }
+        ]
     }
 
 ];
