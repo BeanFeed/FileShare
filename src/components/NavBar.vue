@@ -17,7 +17,6 @@ let open = ref();
 open.value = false;
 onMounted(() => {
   onClickOutside(dropdown, event => {
-    console.log('fire')
     if (open.value === true) open.value = false;
   })
 })
@@ -28,11 +27,6 @@ function GoBack(amount) {
   }
   router.push('/Explorer/' + newP.join('/'));
 }
-
-
-
-
-
 </script>
 
 
@@ -41,26 +35,21 @@ function GoBack(amount) {
 <header class="w-screen h-14 bg-slate-950 text-teal-400 shadow md:flex justify-between items-center">
   <div class="text-sm flex items-center">
     <h1 class="mx-4">File Host</h1>
-    
     <ul class="md:flex md:items-center text-lg">
       <li>
         <router-link to="/Home" class="text-teal-400 rounded-lg md:mx-4 hover:bg-white hover:bg-opacity-10 px-3 py-1 hover:text-teal-400">Home</router-link>
       </li>
-      
       <template v-if="pathName === 'Explorer'">
         <i class="text-white text-xl bi bi-chevron-right"></i>
         <li>
           <a @click="router.push('/Explorer')" class="cursor-pointer text-teal-400 rounded-lg md:mx-4 hover:bg-white hover:bg-opacity-10 px-3 py-1 hover:text-teal-400">Explorer</a>
         </li>
-
         <template v-for="(path, index) in dPath" :key="path">
-          
           <i  class="text-white text-xl bi bi-chevron-right"></i>
           <li>
             <a class="cursor-pointer text-teal-400 rounded-lg md:mx-4 hover:bg-white hover:bg-opacity-10 px-3 py-1 hover:text-teal-400" @click="GoBack(index)">{{path}}</a>
           </li>
         </template>
-        
         <li>
           <div class="container flex items-center">
             <div class="relative text-left inline-flex flex-col w-32">
@@ -72,25 +61,14 @@ function GoBack(amount) {
                 <a class="cursor-pointer text-teal-400 hover:text-teal-400 hover:bg-white hover:bg-opacity-10 block border-t border-teal-500 text-center">New Folder</a>
               </div>
             </div>
-            
-            
           </div>
-          
         </li>
-        
       </template>
       <template v-else-if="pathName === 'Home'">
         <li>
           <router-link to="/Explorer" class="cursor-pointer text-teal-400 rounded-lg md:mx-4 hover:bg-white hover:bg-opacity-10 px-3 py-1 hover:text-teal-400">Go To Explorer</router-link>
         </li>
       </template>
-      
-      
-      
-      
-      
-
-      
     </ul>
   </div>
 </header>
