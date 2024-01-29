@@ -11,6 +11,9 @@ export default {
           850: "#090F21",
           "900-light": "#878B95"
         }
+      },
+      screens: {
+        '2.5xl': '1597px'
       }
     },
   },
