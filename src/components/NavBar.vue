@@ -71,6 +71,19 @@ function GoBack(amount) {
       </template>
     </ul>
   </div>
+  <div class="float-right mx-4">
+    <div class="bg-slate-900 px-2 py-0.5 rounded-3xl">
+      <ul class="md:flex items-center">
+        <li class="mx-1">
+          <i class="bi bi-search"></i>
+        </li>
+        <li class="mx-1 my-1">
+          <input type="text" class="bg-slate-900 focus:outline-none">
+        </li>
+      </ul>
+    </div>
+
+  </div>
 </header>
 </template>
 
