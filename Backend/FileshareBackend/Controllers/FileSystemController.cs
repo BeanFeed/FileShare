@@ -20,7 +20,7 @@ public class FileSystemController : ControllerBase
         
         try
         {
-            string[] items = _fileSystemService.GetFromDirectory(path);
+            FSEntryModel items = _fileSystemService.GetFromDirectory(path);
             ResponseModel res = new ResponseModel(true, items);
             return Ok(res);
         }
