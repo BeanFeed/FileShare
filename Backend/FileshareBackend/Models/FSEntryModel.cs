@@ -2,6 +2,6 @@ namespace FileshareBackend.Models;
 
 public class FSEntryModel
 {
-    public List<DirectoryModel> Directories = new List<DirectoryModel>();
-    public List<FileModel> Files = new List<FileModel>();
+    public List<DirectoryModel> Directories { get; set; } = new List<DirectoryModel>();
+    public List<FileModel> Files { get; set; } = new List<FileModel>();
 }

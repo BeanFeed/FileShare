@@ -1,11 +1,11 @@
 namespace FileshareBackend.Models;
 
-public class ResponseModel
+public class ResponseModel<T> where T : class
 {
     public bool Success { get; set; }
-    public object Message { get; set; }
+    public T Message { get; set; }
 
-    public ResponseModel(bool success, object message)
+    public ResponseModel(bool success, T message)
     {
         Success = success;
         Message = message;

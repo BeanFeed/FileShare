@@ -15,18 +15,18 @@ public class FileSystemController : ControllerBase
         _fileSystemService = fsS;
     }
     [HttpGet]
-    public IActionResult GetFromDirectory(string path)
+    public IActionResult GetFromDirectory([FromQuery]string[] path)
     {
         
         try
         {
             FSEntryModel items = _fileSystemService.GetFromDirectory(path);
-            ResponseModel res = new ResponseModel(true, items);
+            ResponseModel<FSEntryModel> res = new ResponseModel<FSEntryModel>(true, items);
             return Ok(res);
         }
         catch (FileSystemException e)
         {
-            ResponseModel res = new ResponseModel(false, e.Message);
+            ResponseModel<string> res = new ResponseModel<string>(false, e.Message);
             return NotFound(res);
         }
         

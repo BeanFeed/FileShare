@@ -11,8 +11,23 @@ public class FileSystemService : IFileSystemService
     {
         _config = config;
     }
-    public FSEntryModel GetFromDirectory(string path)
+    public FSEntryModel GetFromDirectory(string[] pathArr)
     {
+        for (int i = 0; i < pathArr.Length; i++)
+        {
+            pathArr[i] = Utils.CleanString(pathArr[i]);
+        }
+
+        string path = "";
+        try
+        {
+            path = string.Join('/', pathArr);
+        }
+        catch (Exception e)
+        {
+            
+        }
+        
         string fullPath = Path.Join(_config["DirectoryRootPath"], path);
         if (!Directory.Exists(fullPath))
             throw new FileSystemException($"{path} not Found");
@@ -35,7 +50,7 @@ public class FileSystemService : IFileSystemService
 
         for (int i = 0; i < files.Length; i++)
         {
-            string[] split = directories[i].Split('/');
+            string[] split = files[i].Split('/');
             string name = split[split.Length - 1];
             FileModel file = new FileModel()
             {
