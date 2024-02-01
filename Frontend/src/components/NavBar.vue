@@ -61,7 +61,7 @@ function GoBack(amount) {
                 <i class="bi bi-plus"></i>
               </a>
               <div v-if="open" class="absolute left-0 right-0 w-full mt-9 bg-slate-950 border-teal-500 border-2 rounded-lg">
-                <a class="cursor-pointer text-teal-400 hover:text-teal-400 hover:bg-white hover:bg-opacity-10 block border-b border-teal-500 text-center">New File</a>
+                <a class="cursor-pointer text-teal-400 hover:text-teal-400 hover:bg-white hover:bg-opacity-10 block border-b border-teal-500 text-center">Upload File</a>
                 <a class="cursor-pointer text-teal-400 hover:text-teal-400 hover:bg-white hover:bg-opacity-10 block border-t border-teal-500 text-center">New Folder</a>
               </div>
             </div>
