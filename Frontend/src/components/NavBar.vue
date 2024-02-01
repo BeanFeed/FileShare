@@ -1,13 +1,16 @@
 <script setup>
+
 import {router} from "../router/index.js";
 import {useRoute} from "vue-router";
 import {onMounted, ref, watchEffect} from "vue";
 import Explorer from "../views/Explorer.vue";
 import {onClickOutside} from "@vueuse/core";
+
 const route = useRoute();
 const dPath = ref();
 const pathName = ref();
 const dropdown = ref(null);
+
 watchEffect(() => {
   dPath.value = route.params.Directory;
   pathName.value = route.name;
@@ -27,6 +30,7 @@ function GoBack(amount) {
   }
   router.push('/Explorer/' + newP.join('/'));
 }
+
 </script>
 
 
@@ -34,7 +38,7 @@ function GoBack(amount) {
 <template>
 <header class="w-screen h-14 bg-slate-950 text-teal-400 shadow md:flex justify-between items-center">
   <div class="text-sm flex items-center">
-    <h1 class="mx-4">File Host</h1>
+    <h1 class="mx-4 no-highlight">File Host</h1>
     <ul class="md:flex md:items-center text-lg">
       <li>
         <router-link to="/Home" class="text-teal-400 rounded-lg md:mx-4 hover:bg-white hover:bg-opacity-10 px-3 py-1 hover:text-teal-400">Home</router-link>
@@ -88,5 +92,12 @@ function GoBack(amount) {
 </template>
 
 <style scoped>
+
+.no-highlight{
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-text-select: none;
+  -webkit-user-select: none;
+}
 
 </style>
