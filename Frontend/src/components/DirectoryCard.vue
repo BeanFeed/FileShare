@@ -7,7 +7,6 @@ const props = defineProps(["dirName","itemCount"])
 const dPath = ref();
 watchEffect(() => {
   dPath.value = route.params.Directory;
-  console.log(dPath.value)
 })
 function nextDirectory(name) {
   
