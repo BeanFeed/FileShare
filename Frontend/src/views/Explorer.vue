@@ -20,15 +20,15 @@ var fCardList = ref([]);
 
 watchEffect(async () => {
   
-  dPath.value = route.params.Directory;
+  dPath.value = route.params.Directory === undefined ? [] : route.params.Directory;
   //console.log("change")
   await updateScreen()
   
 });
-watch(store,()=>{
+watch(store,async ()=>{
   if (store.dropFired) {
     store.dropFired = false;
-    DropCard();
+    await DropCard();
   }
 });
 onMounted(async () => {
@@ -74,19 +74,53 @@ let held = ref({
   name: "",
   itemCount: 0,
   path: [""],
-  show: false
+  show: false,
+  type: ""
 });
 
 function MoveDir(data, id) {
-    held.value.id = id;
-    held.value.name = data.name;
-    held.value.itemCount = data.itemCount;
-    held.value.path = dPath.value;
-    held.value.show = true;
-    store.cardHeld = true;
+  held.value.id = id;
+  held.value.name = data.name;
+  held.value.itemCount = data.itemCount;
+  held.value.path = dPath.value;
+  held.value.show = true;
+  held.value.type = "directory";
+  store.cardHeld = true;
 }
 
-function DropCard() {
+function MoveFile(data, id) {
+  console.log(dPath.value)
+  
+  held.value.id = id;
+  held.value.name = data.name;
+  held.value.path = dPath.value;
+  held.value.show = true;
+  held.value.type = "file";
+  store.cardHeld = true;
+  console.log(held.value.path)
+}
+
+async function DropCard() {
+  
+  if (held.value.path !== dPath.value) {
+    let req = await axios.post(Config.BackendUrl + "api/v1/filesystem/movefile",{
+      oldPath : held.value.path,
+      newPath : dPath.value,
+      itemName : held.value.name,
+      overwrite : false
+
+    }, {
+      headers: {'Content-Type': 'application/json'}
+    }).then(async function (res) {
+      if (res.status === 200 && res.data.success === true) {
+
+        console.log(res.data.message)
+        await updateScreen();
+      }
+    })
+  }
+  
+
   held.value = {
     id: -1,
     name: "",
@@ -104,16 +138,18 @@ function DropCard() {
 
         <template v-for="(directory, index) in directories" :key="index">
           <DirectoryCard v-if="index !== held.id || dPath !== held.path"  :id="'dCard'+index" @move-card="MoveDir(directory, index)" :dir-name="directory.name" :item-count="directory.itemCount" />
-          <DirectoryCard v-else :id="'dCard'+index" @move-card="MoveDir(directory, index)" :dir-name="directory.name" :item-count="directory.itemCount" v-show="false"/>
+          <DirectoryCard v-else :id="'dCard'+index" :dir-name="directory.name" :item-count="directory.itemCount" v-show="false"/>
         </template>
-        <template v-for="file in files">
-          <FileCard :file-name="file.name" />
+        <template v-for="(file, index) in files">
+          <FileCard v-if="index !== held.id || dPath !== held.path" :id="'fCard'+index" @move-card="MoveFile(file, index)"  :file-name="file.name" />
+          <FileCard v-else :id="'fCard'+index" :file-name="file.name" />
         </template>
       </template>
 
     </div>
     <div id="pickupBox" class="absolute left-3 top-16">
-      <DirectoryCard v-if="held.show" :id="'dCard' + held.id" :dir-name="held.name" :item-count="held.itemCount" />
+      <DirectoryCard v-if="held.type === 'directory' && held.show" :id="'dCard' + held.id" :dir-name="held.name" :item-count="held.itemCount" />
+      <FileCard v-if="held.type === 'file' && held.show" :id="'fCard' + held.id" :file-name="held.name" />
     </div>
   </div>
   

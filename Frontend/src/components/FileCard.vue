@@ -2,20 +2,19 @@
 import {onMounted, ref} from "vue";
 import {onClickOutside} from "@vueuse/core";
 
-  const props = defineProps(["fileName"])
-  const name = ref(props.fileName);
-  
-  const optionsButton = ref(); 
-  if (name.value.length > 16) {
-
-    name.value = name.value.slice(0, 13) + "...";
-  }
-  const open = ref(false);
-  onMounted(() => {
-    onClickOutside(optionsButton, event => {
-      if (open.value === true) open.value = false;
-    })
+const props = defineProps(["fileName"])
+const name = ref(props.fileName);
+defineEmits(['moveCard'])
+const optionsButton = ref(); 
+if (name.value.length > 16) {
+  name.value = name.value.slice(0, 13) + "...";
+}
+const open = ref(false);
+onMounted(() => {
+  onClickOutside(optionsButton, event => {
+    if (open.value === true) open.value = false;
   })
+})
 </script>
 
 <template>
@@ -32,7 +31,7 @@ import {onClickOutside} from "@vueuse/core";
     <div class="relative text-left items-center inline-flex flex-col w-32">
       <div v-if="open" class="absolute w-full mt-6 bg-slate-900 border-teal-500 border-2 rounded-lg">
         <a class="cursor-pointer text-teal-400 hover:text-teal-400 hover:bg-white hover:bg-opacity-10 block border-b border-teal-500 text-center">Download</a>
-        <a class="cursor-pointer text-teal-400 hover:text-teal-400 hover:bg-white hover:bg-opacity-10 block border-y border-teal-500 text-center">Move</a>
+        <a @click="$emit('moveCard')" class="cursor-pointer text-teal-400 hover:text-teal-400 hover:bg-white hover:bg-opacity-10 block border-y border-teal-500 text-center">Move</a>
         <a class="cursor-pointer text-teal-400 hover:text-teal-400 hover:bg-white hover:bg-opacity-10 block border-t border-teal-500 text-center">Rename</a>
       </div>
     </div>
