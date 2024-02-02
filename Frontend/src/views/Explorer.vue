@@ -14,9 +14,6 @@ var directories = ref();
 var files = ref();
 var updateCount = ref(0);
 
-var dCardList = ref([]);
-var fCardList = ref([]);
-
 watchEffect(async () => {
   
   dPath.value = route.params.Directory;
@@ -61,20 +58,23 @@ function GetUrlArray(varname, arr) {
   return url;
 }
 
+const moveIndex = ref(-1);
 function MoveDir(id) {
-  dCardList.value[id].pickup();
+  moveIndex.value = id;
 }
 
 </script>
 
 <template>
   <div class="flex justify-center px-5 pt-6">
-    <div class="mx-auto grid place-items-center grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 2.5xl:grid-cols-7 gap-4">
-      <div id="pickupBox" class="absolute left-0 top-0"></div>
+    <div id="mainGrid" class="mx-auto grid place-items-center grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 2.5xl:grid-cols-7 gap-4">
+
       <template v-if="gettingData === 'success'" :key="updateCount">
 
         <template v-for="(directory, index) in directories" :key="index">
-          <DirectoryCard @move-card="MoveDir(index)" ref="(el) => dCardList[index] = el" :dir-name="directory.name" :item-count="directory.itemCount" />
+          <teleport :to="moveIndex === index ? '#pickupBox' : '#mainGrid'">
+
+          </teleport>
         </template>
         <template v-for="file in files">
           <FileCard :file-name="file.name" />
