@@ -33,7 +33,7 @@ public class FileSystemController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult MoveFile(MoveItemModel data)
+    public IActionResult MoveItem(MoveItemModel data)
     {
         if (data.itemName != null)
         {
@@ -51,7 +51,17 @@ public class FileSystemController : ControllerBase
         }
         else
         {
-            return Ok("Move Dir");
+            try
+            {
+                _fileSystemService.MoveDirectory(data.oldPath, data.newPath);
+            }
+            catch (FileSystemException e)
+            {
+                ResponseModel<string> res = new ResponseModel<string>(false, e.Message);
+                return BadRequest(res);
+            }
+            return Ok(new ResponseModel<string>(true, "Directory moved"));
         }
     }
+    
 }

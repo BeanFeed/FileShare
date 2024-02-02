@@ -101,6 +101,51 @@ public class FileSystemService : IFileSystemService
         File.Move(path, newPath, overwrite);
         
     }
+
+    public void MoveDirectory(string[] pathArr, string[] newPathArr)
+    {
+        for (int i = 0; i < pathArr.Length; i++)
+        {
+            pathArr[i] = Utils.CleanString(pathArr[i]);
+        }
+
+        string path = "";
+        try
+        {
+            path = string.Join('/', pathArr);
+        }
+        catch (Exception e)
+        {
+            
+        }
+
+        string newPath = "";
+        for (int i = 0; i < newPathArr.Length; i++)
+        {
+            newPathArr[i] = Utils.CleanString(newPathArr[i]);
+        }
+        try
+        {
+            newPath = string.Join('/', newPathArr);
+        }
+        catch (Exception e)
+        {
+            
+        }
+
+        newPath = Path.Join(_config["DirectoryRootPath"], newPath);
+        path = Path.Join(_config["DirectoryRootPath"], path);
+        try
+        {
+            Directory.Move(path, newPath);
+        }
+        catch (IOException e)
+        {
+            throw new FileSystemException(e.Message);
+        }
+        
+    }
+    
     private int GetItemCount(string path)
     {
         return Directory.GetFileSystemEntries(path).Length;

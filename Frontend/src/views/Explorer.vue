@@ -82,7 +82,7 @@ function MoveDir(data, id) {
   held.value.id = id;
   held.value.name = data.name;
   held.value.itemCount = data.itemCount;
-  held.value.path = dPath.value;
+  held.value.path = [...dPath.value];
   held.value.show = true;
   held.value.type = "directory";
   store.cardHeld = true;
@@ -93,7 +93,7 @@ function MoveFile(data, id) {
   
   held.value.id = id;
   held.value.name = data.name;
-  held.value.path = dPath.value;
+  held.value.path = [...dPath.value];
   held.value.show = true;
   held.value.type = "file";
   store.cardHeld = true;
@@ -103,13 +103,25 @@ function MoveFile(data, id) {
 async function DropCard() {
   
   if (held.value.path !== dPath.value) {
-    let req = await axios.post(Config.BackendUrl + "api/v1/filesystem/movefile",{
-      oldPath : held.value.path,
-      newPath : dPath.value,
-      itemName : held.value.name,
-      overwrite : false
-
-    }, {
+    let data = {
+      newPath : [...dPath.value]
+    };
+    if (held.value.type === 'directory') {
+      if (held.value.path[0] === "") {
+        held.value.path = [held.value.name];
+      } else {
+        held.value.path[held.value.path.length] = held.value.name;
+      }
+      data.oldPath = held.value.path;
+      data.newPath[data.newPath.length] = held.value.name;
+    } else {
+      data.oldPath = held.value.path;
+      data.itemName = held.value.name;
+      data.overwrite = false;
+    }
+    
+    
+    let req = await axios.post(Config.BackendUrl + "api/v1/filesystem/moveitem",data, {
       headers: {'Content-Type': 'application/json'}
     }).then(async function (res) {
       if (res.status === 200 && res.data.success === true) {
