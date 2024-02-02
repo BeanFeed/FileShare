@@ -30,6 +30,11 @@ public class FileSystemController : ControllerBase
             return NotFound(res);
         }
         
+    }
+
+    [HttpPost]
+    public IActionResult MoveItem(string[] path)
+    {
         
     }
 }

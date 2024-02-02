@@ -64,6 +64,43 @@ public class FileSystemService : IFileSystemService
 
     }
 
+    public void MoveFile(string[] pathArr, string[] newPathArr, string name, bool overwrite)
+    {
+        for (int i = 0; i < pathArr.Length; i++)
+        {
+            pathArr[i] = Utils.CleanString(pathArr[i]);
+        }
+
+        string path = "";
+        try
+        {
+            path = string.Join('/', pathArr);
+        }
+        catch (Exception e)
+        {
+            
+        }
+
+        string newPath = "";
+        for (int i = 0; i < pathArr.Length; i++)
+        {
+            newPathArr[i] = Utils.CleanString(newPathArr[i]);
+        }
+        try
+        {
+            newPath = string.Join('/', newPathArr);
+        }
+        catch (Exception e)
+        {
+            
+        }
+
+        newPath = Path.Join(_config["DirectoryRootPath"], newPath, name);
+        path = Path.Join(_config["DirectoryRootPath"], path, name);
+        if (!overwrite && File.Exists(newPath)) throw new FileSystemException("File exists in new location");
+        File.Move(path, newPath, overwrite);
+        
+    }
     private int GetItemCount(string path)
     {
         return Directory.GetFileSystemEntries(path).Length;
