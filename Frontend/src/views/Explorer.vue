@@ -1,10 +1,11 @@
 <script setup>
-import {onMounted, ref, watchEffect} from "vue";
+import {onMounted, ref, watch, watchEffect} from "vue";
 import {useRoute} from "vue-router";
 import DirectoryCard from "../components/DirectoryCard.vue";
 import Config from "../config.json";
 import axios from "axios";
 import FileCard from "../components/FileCard.vue";
+import {store} from "../state/state.js";
 
 const dPath = ref();
 dPath.value = [""]
@@ -20,12 +21,19 @@ var fCardList = ref([]);
 watchEffect(async () => {
   
   dPath.value = route.params.Directory;
+  //console.log("change")
   await updateScreen()
   
 });
-
+watch(store,()=>{
+  if (store.dropFired) {
+    store.dropFired = false;
+    DropCard();
+  }
+});
 onMounted(async () => {
   console.log('mounted')
+  
   await updateScreen()
 })
 
@@ -61,26 +69,48 @@ function GetUrlArray(varname, arr) {
   return url;
 }
 
-function MoveDir(id) {
-  dCardList.value[id].pickup();
+let held = ref({
+  id: -1,
+  name: "",
+  itemCount: 0,
+  show: false
+});
+
+function MoveDir(data, id) {
+    held.value.id = id;
+    held.value.name = data.name;
+    held.value.itemCount = data.itemCount;
+    held.value.show = true;
+    store.cardHeld = true;
 }
 
+function DropCard() {
+  held.value = {
+    id: -1,
+    name: "",
+    itemCount: 0,
+    show: false
+  };
+}
 </script>
 
 <template>
   <div class="flex justify-center px-5 pt-6">
-    <div class="mx-auto grid place-items-center grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 2.5xl:grid-cols-7 gap-4">
-      <div id="pickupBox" class="absolute left-0 top-0"></div>
+    <div id="mainBox"  class="mx-auto grid place-items-center grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 2.5xl:grid-cols-7 gap-4">
       <template v-if="gettingData === 'success'" :key="updateCount">
 
         <template v-for="(directory, index) in directories" :key="index">
-          <DirectoryCard @move-card="MoveDir(index)" ref="(el) => dCardList[index] = el" :dir-name="directory.name" :item-count="directory.itemCount" />
+          <DirectoryCard v-if="index !== held.id"  :id="'dCard'+index" @move-card="MoveDir(directory, index)" :dir-name="directory.name" :item-count="directory.itemCount" />
+          <DirectoryCard v-else :id="'dCard'+index" @move-card="MoveDir(directory, index)" :dir-name="directory.name" :item-count="directory.itemCount" v-show="false"/>
         </template>
         <template v-for="file in files">
           <FileCard :file-name="file.name" />
         </template>
       </template>
 
+    </div>
+    <div id="pickupBox" class="absolute left-3 top-16">
+      <DirectoryCard v-if="held.show" :id="'dCard' + held.id" :dir-name="held.name" :item-count="held.itemCount" />
     </div>
   </div>
   

@@ -5,12 +5,13 @@ import {useRoute} from "vue-router";
 import {onMounted, ref, watchEffect} from "vue";
 import Explorer from "../views/Explorer.vue";
 import {onClickOutside} from "@vueuse/core";
+import {store} from "../state/state.js";
 
 const route = useRoute();
 const dPath = ref();
 const pathName = ref();
 const dropdown = ref(null);
-
+defineExpose()
 watchEffect(() => {
   dPath.value = route.params.Directory;
   pathName.value = route.name;
@@ -75,7 +76,9 @@ function GoBack(amount) {
       </template>
     </ul>
   </div>
-  <div class="float-right mx-4">
+  
+  <div class="float-right mx-4 md:flex items-center">
+    <a v-if="store.cardHeld" @click="store.cardHeld = false; store.dropFired = true;" class="mx-4 bg-teal-500 hover:bg-teal-600 px-2 text-slate-900 py-0.5 rounded-lg hover:text-slate-950 cursor-pointer">Drop Card</a>
     <div class="bg-slate-900 px-2 py-0.5 rounded-3xl">
       <ul class="md:flex items-center">
         <li class="mx-1">

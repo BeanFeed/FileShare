@@ -7,7 +7,6 @@ const route = useRoute();
 const props = defineProps(["dirName","itemCount"])
 const dPath = ref();
 defineEmits(['moveCard'])
-defineExpose([pickup])
 watchEffect(() => {
   dPath.value = route.params.Directory;
   console.log(dPath.value)
