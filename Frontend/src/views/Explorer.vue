@@ -73,6 +73,7 @@ let held = ref({
   id: -1,
   name: "",
   itemCount: 0,
+  path: [""],
   show: false
 });
 
@@ -80,6 +81,7 @@ function MoveDir(data, id) {
     held.value.id = id;
     held.value.name = data.name;
     held.value.itemCount = data.itemCount;
+    held.value.path = dPath.value;
     held.value.show = true;
     store.cardHeld = true;
 }
@@ -89,6 +91,7 @@ function DropCard() {
     id: -1,
     name: "",
     itemCount: 0,
+    path: [""],
     show: false
   };
 }
@@ -100,7 +103,7 @@ function DropCard() {
       <template v-if="gettingData === 'success'" :key="updateCount">
 
         <template v-for="(directory, index) in directories" :key="index">
-          <DirectoryCard v-if="index !== held.id"  :id="'dCard'+index" @move-card="MoveDir(directory, index)" :dir-name="directory.name" :item-count="directory.itemCount" />
+          <DirectoryCard v-if="index !== held.id || dPath !== held.path"  :id="'dCard'+index" @move-card="MoveDir(directory, index)" :dir-name="directory.name" :item-count="directory.itemCount" />
           <DirectoryCard v-else :id="'dCard'+index" @move-card="MoveDir(directory, index)" :dir-name="directory.name" :item-count="directory.itemCount" v-show="false"/>
         </template>
         <template v-for="file in files">
