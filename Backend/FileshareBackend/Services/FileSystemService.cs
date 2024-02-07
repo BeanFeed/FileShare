@@ -203,7 +203,7 @@ public class FileSystemService : IFileSystemService
 
         if (Directory.Exists(path))
         {
-            if (Directory.GetDirectories(path).Length != 0) throw new FileSystemException("Directory not empty");
+            if (Directory.GetFileSystemEntries(path).Length != 0) throw new FileSystemException("Directory not empty");
             
             Directory.Delete(path);
         } 
@@ -216,11 +216,17 @@ public class FileSystemService : IFileSystemService
             throw new FileSystemException("File Not Found");
         }
     }
+
+    public void UploadFile(string[] pathArr, FormFile file)
+    {
+        
+    }
     
     private int GetItemCount(string path)
     {
         return Directory.GetFileSystemEntries(path).Length;
     }
+    
     
     
 }

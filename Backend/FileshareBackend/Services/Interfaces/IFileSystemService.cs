@@ -10,4 +10,5 @@ public interface IFileSystemService
     public void RenameItem(string[] pathArr, string newName);
 
     public void DeleteItem(string[] pathArr);
+    public void UploadFile(string[] pathArr, FormFile file);
 }
