@@ -25,14 +25,14 @@ public class FileSystemService : IFileSystemService
         }
         catch (Exception e)
         {
-            
+            throw new FileSystemException("Failed to locate directory");
         }
         
         string fullPath = Path.Join(_config["DirectoryRootPath"], path);
         if (!Directory.Exists(fullPath))
             throw new FileSystemException($"{path} not Found");
-        string[] directories = Directory.GetDirectories(fullPath);
-        string[] files = Directory.GetFiles(fullPath);
+        string[] directories = Directory.GetDirectories(fullPath).OrderBy(f => f).ToArray();
+        string[] files = Directory.GetFiles(fullPath).OrderBy(f => f).ToArray();
         List<string> allList = new List<string>();
         FSEntryModel entries = new FSEntryModel();
         
@@ -78,7 +78,7 @@ public class FileSystemService : IFileSystemService
         }
         catch (Exception e)
         {
-            
+            throw new FileSystemException("Failed to locate directory");
         }
 
         string newPath = "";
@@ -92,7 +92,7 @@ public class FileSystemService : IFileSystemService
         }
         catch (Exception e)
         {
-            
+            throw new FileSystemException("Failed to locate directory");
         }
 
         newPath = Path.Join(_config["DirectoryRootPath"], newPath, name);
@@ -116,7 +116,7 @@ public class FileSystemService : IFileSystemService
         }
         catch (Exception e)
         {
-            
+            throw new FileSystemException("Failed to locate directory");
         }
 
         string newPath = "";
@@ -130,7 +130,7 @@ public class FileSystemService : IFileSystemService
         }
         catch (Exception e)
         {
-            
+            throw new FileSystemException("Failed to locate directory");
         }
 
         newPath = Path.Join(_config["DirectoryRootPath"], newPath);
@@ -145,9 +145,82 @@ public class FileSystemService : IFileSystemService
         }
         
     }
+
+    public void RenameItem(string[] pathArr, string newName)
+    {
+        for (int i = 0; i < pathArr.Length; i++)
+        {
+            pathArr[i] = Utils.CleanString(pathArr[i]);
+        }
+
+        string oldPath = "";
+        try
+        {
+            oldPath = string.Join('/', pathArr);
+        }
+        catch
+        {
+            throw new FileSystemException("Failed to locate directory");
+        }
+
+        string newPath = "";
+        try
+        {
+            pathArr[pathArr.Length - 1] = newName;
+            newPath = string.Join('/', pathArr);
+        }
+        catch
+        {
+            throw new FileSystemException("Failed to locate directory");
+        }
+
+        oldPath = Path.Join(_config["DirectoryRootPath"], oldPath);
+        newPath = Path.Join(_config["DirectoryRootPath"], newPath);
+        try
+        {
+            Directory.Move(oldPath, newPath);
+        }
+        catch (IOException e)
+        {
+            throw new FileSystemException(e.Message);
+        }
+
+
+    }
+
+    public void DeleteItem(string[] pathArr)
+    {
+        string path = "";Path.Join(_config["DirectoryRootPath"], string.Join('/', pathArr));
+        try
+        {
+            
+            path = Path.Join(_config["DirectoryRootPath"], string.Join('/', pathArr));
+        }
+        catch
+        {
+            throw new FileSystemException("Failed to locate item");
+        }
+
+        if (Directory.Exists(path))
+        {
+            if (Directory.GetDirectories(path).Length != 0) throw new FileSystemException("Directory not empty");
+            
+            Directory.Delete(path);
+        } 
+        else if (File.Exists(path))
+        {
+            File.Delete(path);
+        }
+        else
+        {
+            throw new FileSystemException("File Not Found");
+        }
+    }
     
     private int GetItemCount(string path)
     {
         return Directory.GetFileSystemEntries(path).Length;
     }
+    
+    
 }

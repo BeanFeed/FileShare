@@ -11,7 +11,7 @@ const route = useRoute();
 const dPath = ref();
 const pathName = ref();
 const dropdown = ref(null);
-defineExpose()
+const fileInput = ref(null);
 watchEffect(() => {
   dPath.value = route.params.Directory;
   pathName.value = route.name;
@@ -19,7 +19,9 @@ watchEffect(() => {
 //console.log(this.route.query.params)
 let open = ref();
 open.value = false;
+let isLoading = ref(true);
 onMounted(() => {
+  isLoading.value = false;
   onClickOutside(dropdown, event => {
     if (open.value === true) open.value = false;
   })
@@ -31,6 +33,15 @@ function GoBack(amount) {
   }
   router.push('/Explorer/' + newP.join('/'));
 }
+
+function SubmitFile(event) {
+  store.uploadedFile = event.target.files[0];
+}
+
+function OpenFilePrompt() {
+  console.log(fileInput.value.click())
+}
+
 
 </script>
 
@@ -61,13 +72,15 @@ function GoBack(amount) {
               <a ref="dropdown" @click="open = !open" class="cursor-pointer bg-teal-500 text-slate-900 text-3xl rounded-lg items-center justify-center w-7 h-7 flex hover:text-slate-900 hover:bg-teal-600">
                 <i class="bi bi-plus"></i>
               </a>
+              
               <div v-if="open" class="absolute left-0 right-0 w-full mt-9 bg-slate-950 border-teal-500 border-2 rounded-lg">
-                <a class="cursor-pointer text-teal-400 hover:text-teal-400 hover:bg-white hover:bg-opacity-10 block border-b border-teal-500 text-center">Upload File</a>
+                <a @click="OpenFilePrompt()" class="cursor-pointer text-teal-400 hover:text-teal-400 hover:bg-white hover:bg-opacity-10 block border-b border-teal-500 text-center">Upload File</a>
                 <a class="cursor-pointer text-teal-400 hover:text-teal-400 hover:bg-white hover:bg-opacity-10 block border-t border-teal-500 text-center">New Folder</a>
               </div>
             </div>
           </div>
         </li>
+        
       </template>
       <template v-else-if="pathName === 'Home'">
         <li>
@@ -75,6 +88,7 @@ function GoBack(amount) {
         </li>
       </template>
     </ul>
+    <input ref="fileInput" @change="e => SubmitFile(e)" type="file" style="display: none">
   </div>
   
   <div class="float-right mx-4 md:flex items-center">

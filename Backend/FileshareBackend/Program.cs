@@ -11,7 +11,7 @@ builder.Services.AddCors(options =>
         {
             x.WithOrigins("http://localhost:5173")
                 .AllowAnyHeader()
-                .AllowAnyMethod();
+                .WithMethods("GET","POST","PUT","DELETE","OPTIONS");
         });
 });
 // Add services to the container.

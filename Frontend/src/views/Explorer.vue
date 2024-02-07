@@ -6,6 +6,7 @@ import Config from "../config.json";
 import axios from "axios";
 import FileCard from "../components/FileCard.vue";
 import {store} from "../state/state.js";
+import TextPrompt from "../components/TextPrompt.vue";
 
 const dPath = ref();
 dPath.value = [""]
@@ -14,10 +15,10 @@ var gettingData = ref('pending');
 var directories = ref();
 var files = ref();
 var updateCount = ref(0);
-
+var renaming = ref(false);
 var dCardList = ref([]);
 var fCardList = ref([]);
-
+var fileInputName = ref('');
 watchEffect(async () => {
   
   dPath.value = route.params.Directory === undefined ? [] : route.params.Directory;
@@ -29,8 +30,9 @@ watch(store,async ()=>{
   if (store.dropFired) {
     store.dropFired = false;
     await DropCard();
-  }
+  } else if (store.uploadedFile !== null) fileInputName.value = store.uploadedFile.name;
 });
+
 onMounted(async () => {
   console.log('mounted')
   
@@ -88,6 +90,8 @@ function MoveDir(data, id) {
   store.cardHeld = true;
 }
 
+let toBeRenamed = ref(-1);
+let toBeRenamedType = ref('dir');
 function MoveFile(data, id) {
   console.log(dPath.value)
   
@@ -141,6 +145,51 @@ async function DropCard() {
     show: false
   };
 }
+
+async function RenameItem(newName) {
+  let oldPath = [...dPath.value];
+  if (oldPath[0] === ""){
+    oldPath = [toBeRenamed.value];
+  } else {
+    oldPath[oldPath.length] = toBeRenamed.value;
+  }
+  //console.log(oldPath)
+  let data = {
+    itemPath: oldPath,
+    newName: newName
+  }
+  let req = await axios.post(Config.BackendUrl + "api/v1/filesystem/renameitem",data, {
+    headers: {'Content-Type': 'application/json'}
+  }).then(async function (res) {
+    if (res.status === 200 && res.data.success === true) {
+
+      console.log(res.data.message)
+      await updateScreen();
+    }
+  })
+  toBeRenamed.value = -1;
+  renaming.value = false;
+}
+
+async function DeleteItem(name) {
+  let path = [...dPath.value];
+  path[path.length] = name;
+  let req = await axios({
+    url:Config.BackendUrl + "api/v1/filesystem/deleteitem",
+    data: path,
+    method:"DELETE"
+  }).then(async function (res) {
+    if (res.status === 200 && res.data.success === true) {
+
+      console.log(res.data.message)
+      await updateScreen();
+    }
+  })
+}
+
+async function UploadItem(name) {
+  console.log(name)
+}
 </script>
 
 <template>
@@ -149,20 +198,22 @@ async function DropCard() {
       <template v-if="gettingData === 'success'" :key="updateCount">
 
         <template v-for="(directory, index) in directories" :key="index">
-          <DirectoryCard v-if="index !== held.id || dPath !== held.path"  :id="'dCard'+index" @move-card="MoveDir(directory, index)" :dir-name="directory.name" :item-count="directory.itemCount" />
+          <DirectoryCard v-if="index !== held.id || dPath !== held.path"  :id="'dCard'+index" @delete-card="DeleteItem(directory.name)" @rename-card="toBeRenamed = directory.name; renaming = true;" @move-card="MoveDir(directory, index)" :dir-name="directory.name" :item-count="directory.itemCount" />
           <DirectoryCard v-else :id="'dCard'+index" :dir-name="directory.name" :item-count="directory.itemCount" v-show="false"/>
         </template>
         <template v-for="(file, index) in files">
-          <FileCard v-if="index !== held.id || dPath !== held.path" :id="'fCard'+index" @move-card="MoveFile(file, index)"  :file-name="file.name" />
+          <FileCard v-if="index !== held.id || dPath !== held.path" :id="'fCard'+index" @delete-card="DeleteItem(file.name)" @rename-card="toBeRenamed = file.name; renaming = true;" @move-card="MoveFile(file, index)"  :file-name="file.name" />
           <FileCard v-else :id="'fCard'+index" :file-name="file.name" />
         </template>
       </template>
 
     </div>
     <div id="pickupBox" class="absolute left-3 top-16">
-      <DirectoryCard v-if="held.type === 'directory' && held.show" :id="'dCard' + held.id" :dir-name="held.name" :item-count="held.itemCount" />
-      <FileCard v-if="held.type === 'file' && held.show" :id="'fCard' + held.id" :file-name="held.name" />
+      <DirectoryCard v-if="held.type === 'directory' && held.show" :id="'dCard' + held.id" :dir-name="held.name" :item-count="held.itemCount" :is-held="true"/>
+      <FileCard v-if="held.type === 'file' && held.show" :id="'fCard' + held.id" :file-name="held.name" :is-held="true"/>
     </div>
+    <TextPrompt v-show="renaming" prompt-message="Rename this file" @cancel="toBeRenamed = -1; renaming = false;" @input="async (e) => RenameItem(e)"/>
+    <TextPrompt v-show="store.uploadedFile !== null" prompt-message="Name for this file?" :def-name="fileInputName" @cancel="store.uploadedFile = null;" @input="async (e) => UploadItem(e)"/>
   </div>
   
 

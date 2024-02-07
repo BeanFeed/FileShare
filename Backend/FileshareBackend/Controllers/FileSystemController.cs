@@ -63,5 +63,38 @@ public class FileSystemController : ControllerBase
             return Ok(new ResponseModel<string>(true, "Directory moved"));
         }
     }
+
+    [HttpPost]
+    public IActionResult RenameItem(RenameItemModel data)
+    {
+        try
+        {
+            _fileSystemService.RenameItem(data.ItemPath, data.NewName);
+        }
+        catch (FileSystemException e)
+        {
+            ResponseModel<string> res = new ResponseModel<string>(false, e.Message);
+            return BadRequest(res);
+        }
+        return Ok(new ResponseModel<string>(true, "Item renamed"));
+    }
+    
+    
+
+    [HttpDelete]
+    public IActionResult DeleteItem([FromBody] string[] path)
+    {
+        try
+        {
+            _fileSystemService.DeleteItem(path);
+        }
+        catch (FileSystemException e)
+        {
+            ResponseModel<string> res = new ResponseModel<string>(false, e.Message);
+            return BadRequest(res);
+        }
+        
+        return Ok(new ResponseModel<string>(true, "Item deleted"));
+    }
     
 }
