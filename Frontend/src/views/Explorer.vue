@@ -173,7 +173,8 @@ async function RenameItem(newName) {
 
 async function DeleteItem(name) {
   let path = [...dPath.value];
-  path[path.length] = name;
+  if(path[0] === "") path = [name];
+  else path[path.length] = name;
   let req = await axios({
     url:Config.BackendUrl + "api/v1/filesystem/deleteitem",
     data: path,
