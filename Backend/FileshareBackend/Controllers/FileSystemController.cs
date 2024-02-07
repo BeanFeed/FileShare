@@ -96,5 +96,19 @@ public class FileSystemController : ControllerBase
         
         return Ok(new ResponseModel<string>(true, "Item deleted"));
     }
+
+    [HttpPost]
+    public IActionResult UploadFile([FromForm] FileUploadModel uploadModel, [FromBody] string[] path)
+    {
+        try
+        {
+            _fileSystemService.UploadFile(path, uploadModel.File);
+        }
+        catch (FileSystemException e)
+        {
+            
+        }
+        return Ok();
+    }
     
 }

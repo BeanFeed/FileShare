@@ -190,7 +190,7 @@ public class FileSystemService : IFileSystemService
 
     public void DeleteItem(string[] pathArr)
     {
-        string path = "";Path.Join(_config["DirectoryRootPath"], string.Join('/', pathArr));
+        string path = "";
         try
         {
             
@@ -217,8 +217,19 @@ public class FileSystemService : IFileSystemService
         }
     }
 
-    public void UploadFile(string[] pathArr, FormFile file)
+    public void UploadFile(string[] pathArr, IFormFile file)
     {
+        string path = "";
+        try
+        {
+            
+            path = Path.Join(_config["DirectoryRootPath"], string.Join('/', pathArr));
+        }
+        catch
+        {
+            throw new FileSystemException("Failed to locate directory");
+        }
+        
         
     }
     
