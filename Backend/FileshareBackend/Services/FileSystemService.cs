@@ -229,8 +229,14 @@ public class FileSystemService : IFileSystemService
         {
             throw new FileSystemException("Failed to locate directory");
         }
+
+        if (File.Exists(Path.Join(path, file.FileName))) throw new FileSystemException("File already Exists");
+
+        var stream = File.OpenWrite(Path.Join(path, file.FileName));
         
-        
+        file.CopyTo(stream);
+
+        // stream.Close();
     }
     
     private int GetItemCount(string path)

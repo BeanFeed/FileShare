@@ -98,17 +98,17 @@ public class FileSystemController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult UploadFile([FromForm] FileUploadModel uploadModel, [FromBody] string[] path)
+    public IActionResult UploadFile([FromForm] FileUploadModel uploadModel)
     {
         try
         {
-            _fileSystemService.UploadFile(path, uploadModel.File);
+            _fileSystemService.UploadFile(uploadModel.Path, uploadModel.File);
         }
         catch (FileSystemException e)
         {
-            
+            return BadRequest(new ResponseModel<string>(false, e.Message));
         }
-        return Ok();
+        return Ok(new ResponseModel<string>(true, "File uploaded"));
     }
     
 }

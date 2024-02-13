@@ -1,6 +1,8 @@
 using DAL.Context;
 using FileshareBackend.Services;
 using FileshareBackend.Services.Interfaces;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +27,14 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddDbContext<MyDbContext>(o=>
     o.UseSqlite(builder.Configuration.GetValue<string>("Database_ConnectionString"))
 );
-
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = int.MaxValue;
+});
+builder.Services.Configure<KestrelServerOptions>(options =>
+{
+    options.Limits.MaxRequestBodySize = int.MaxValue;
+});
 
 var app = builder.Build();
 
