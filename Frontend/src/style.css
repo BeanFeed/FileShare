@@ -49,6 +49,24 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
+progress {
+  background: #090F21;
+
+}
+
+progress {
+  color:  rgb(45, 212, 191);
+}
+
+progress::-moz-progress-bar {
+  background:  rgb(45, 212, 191);
+}
+
+progress::-webkit-progress-value {
+  background:  rgb(45, 212, 191);
+}
+
 button:hover {
   border-color: #646cff;
 }

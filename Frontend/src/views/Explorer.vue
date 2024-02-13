@@ -188,8 +188,40 @@ async function DeleteItem(name) {
   })
 }
 
+let uploadProgress = ref(0);
+let uploading = ref(false);
+function ProgressUpdate(data) {
+  console.log(data);
+  uploadProgress.value = data.progress;
+}
 async function UploadItem(name) {
+  let path = [...dPath.value];
+  let formData = new FormData();
+  let file = name !== null ? renameFile(store.uploadedFile, name) : store.uploadedFile;
+  formData.append("File", file);
+  formData.append("Path", path);
   console.log(name)
+  uploading.value = true;
+  let req = await axios.post(Config.BackendUrl + "api/v1/filesystem/uploadfile", formData, {
+    headers: {
+      'Content-Type' : 'multipart/form-data'
+    },
+    onUploadProgress: progressEvent => ProgressUpdate(progressEvent)
+  }).then(async function (res) {
+    console.log(res.data.message);
+    store.uploadedFile = null;
+    uploadProgress.value = 0;
+    uploading.value = false;
+    await updateScreen();
+  });
+
+}
+
+function renameFile(originalFile, newName) {
+  return new File([originalFile], newName, {
+    type: originalFile.type,
+    lastModified: originalFile.lastModified,
+  });
 }
 </script>
 
@@ -214,7 +246,7 @@ async function UploadItem(name) {
       <FileCard v-if="held.type === 'file' && held.show" :id="'fCard' + held.id" :file-name="held.name" :is-held="true"/>
     </div>
     <TextPrompt v-show="renaming" prompt-message="Rename this file" @cancel="toBeRenamed = -1; renaming = false;" @input="async (e) => RenameItem(e)"/>
-    <TextPrompt v-show="store.uploadedFile !== null" prompt-message="Name for this file?" :def-name="fileInputName" @cancel="store.uploadedFile = null;" @input="async (e) => UploadItem(e)"/>
+    <TextPrompt v-show="store.uploadedFile !== null" prompt-message="Name for this file?" :def-name="fileInputName" @cancel="store.uploadedFile = null;" @input="async (e) => UploadItem(e)" :output-type="uploading ? 'progress' : null" :output-value="uploadProgress"/>
   </div>
   
 

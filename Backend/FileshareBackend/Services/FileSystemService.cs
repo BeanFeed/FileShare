@@ -236,7 +236,7 @@ public class FileSystemService : IFileSystemService
         
         file.CopyTo(stream);
 
-        // stream.Close();
+        stream.Close();
     }
     
     private int GetItemCount(string path)
