@@ -110,5 +110,11 @@ public class FileSystemController : ControllerBase
         }
         return Ok(new ResponseModel<string>(true, "File uploaded"));
     }
+
+    [HttpGet]
+    public IActionResult DownloadFile([FromQuery] string[] pathArr)
+    {
+        return Ok();
+    }
     
 }

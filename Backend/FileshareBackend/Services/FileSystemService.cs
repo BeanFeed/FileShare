@@ -230,13 +230,30 @@ public class FileSystemService : IFileSystemService
             throw new FileSystemException("Failed to locate directory");
         }
 
-        if (File.Exists(Path.Join(path, file.FileName))) throw new FileSystemException("File already Exists");
+        if (File.Exists(Path.Join(path, file.FileName))) throw new FileSystemException("File already exists");
 
         var stream = File.OpenWrite(Path.Join(path, file.FileName));
         
         file.CopyTo(stream);
-
+        
         stream.Close();
+    }
+
+    public FileStream DownloadImage(string[] pathArr)
+    {
+        string path = "";
+        try
+        {
+            
+            path = Path.Join(_config["DirectoryRootPath"], string.Join('/', pathArr));
+        }
+        catch
+        {
+            throw new FileSystemException("Failed to locate directory");
+        }
+        if (!File.Exists(path)) throw new FileSystemException("File doesn't exists");
+        
+
     }
     
     private int GetItemCount(string path)
