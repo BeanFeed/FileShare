@@ -7,7 +7,7 @@ using MimeTypes;
 namespace FileshareBackend.Controllers;
 
 [ApiController]
-[Route("api/v1/[controller]/[action]")]
+[Route("v1/[controller]/[action]")]
 public class FileSystemController : ControllerBase
 {
     private readonly IFileSystemService _fileSystemService;

@@ -22,7 +22,7 @@ watchEffect(async () => {
   
   dPath.value = route.params.Directory === undefined ? [] : route.params.Directory;
   //console.log("change")
-  await updateScreen()
+  await updateScreen();
   
 });
 watch(store,async ()=>{
@@ -38,15 +38,15 @@ onMounted(async () => {
   await updateScreen()
 })
 
-async function updateScreen(_props) {
+async function updateScreen() {
   gettingData.value = "pending"
-  console.log(Config.BackendUrl + "api/v1/filesystem/getfromdirectory" + GetUrlArray("pathArr", dPath.value))
+  console.log(Config.BackendUrl + "v1/filesystem/getfromdirectory" + GetUrlArray("pathArr", dPath.value))
   let req = await axios({
     method: "GET",
-    url: Config.BackendUrl + "api/v1/filesystem/getfromdirectory" + GetUrlArray("pathArr", dPath.value)
+    url: Config.BackendUrl + "v1/filesystem/getfromdirectory" + GetUrlArray("pathArr", dPath.value)
 
   })
-      .then(function (res) {
+      .then(async function (res) {
         if (res.status === 200 && res.data.success === true) {
           gettingData.value = "success";
           directories.value = res.data.message.directories;
@@ -124,7 +124,7 @@ async function DropCard() {
     }
     
     
-    let req = await axios.post(Config.BackendUrl + "api/v1/filesystem/moveitem",data, {
+    let req = await axios.post(Config.BackendUrl + "v1/filesystem/moveitem",data, {
       headers: {'Content-Type': 'application/json'}
     }).then(async function (res) {
       if (res.status === 200 && res.data.success === true) {
@@ -157,7 +157,7 @@ async function RenameItem(newName) {
     itemPath: oldPath,
     newName: newName
   }
-  let req = await axios.post(Config.BackendUrl + "api/v1/filesystem/renameitem",data, {
+  let req = await axios.post(Config.BackendUrl + "v1/filesystem/renameitem",data, {
     headers: {'Content-Type': 'application/json'}
   }).then(async function (res) {
     if (res.status === 200 && res.data.success === true) {
@@ -175,7 +175,7 @@ async function DeleteItem(name) {
   if(path[0] === "") path = [name];
   else path[path.length] = name;
   let req = await axios({
-    url:Config.BackendUrl + "api/v1/filesystem/deleteitem",
+    url:Config.BackendUrl + "v1/filesystem/deleteitem",
     data: path,
     method:"DELETE"
   }).then(async function (res) {
@@ -201,7 +201,7 @@ async function UploadItem(name) {
   formData.append("Path", path);
   console.log(name)
   uploading.value = true;
-  let req = await axios.post(Config.BackendUrl + "api/v1/filesystem/uploadfile", formData, {
+  let req = await axios.post(Config.BackendUrl + "v1/filesystem/uploadfile", formData, {
     headers: {
       'Content-Type' : 'multipart/form-data'
     },
@@ -219,7 +219,7 @@ async function UploadItem(name) {
 async function DownloadItem(name) {
   let path = [...dPath.value];
   path[path.length] = name;
-  let req = await axios.get(Config.BackendUrl + "api/v1/filesystem/downloadfile" + GetUrlArray("pathArr" ,path) + "&raw=false")
+  let req = await axios.get(Config.BackendUrl + "v1/filesystem/downloadfile" + GetUrlArray("pathArr" ,path) + "&raw=false")
       .then(function (res) {
         console.log(res);
         ForceFileDownload(res, name);

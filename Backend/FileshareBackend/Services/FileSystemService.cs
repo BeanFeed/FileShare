@@ -20,9 +20,15 @@ public class FileSystemService : IFileSystemService
         }
 
         string path = "";
+        //string parentPath = "";
         try
         {
             path = string.Join('/', pathArr);
+            /*
+            List<string> ppArr = pathArr.ToList();
+            ppArr.RemoveAt(ppArr.Count-1);
+            parentPath = string.Join('/', ppArr);
+            */
         }
         catch (Exception e)
         {
@@ -30,8 +36,21 @@ public class FileSystemService : IFileSystemService
         }
         
         string fullPath = Path.Join(_config["DirectoryRootPath"], path);
+        /*
         if (!Directory.Exists(fullPath))
-            throw new FileSystemException($"{path} not Found");
+        {
+            if (!Directory.Exists(Path.Join(_config["DirectoryRootPath"], parentPath)) || !File.Exists(fullPath))
+            {
+                throw new FileSystemException($"{path} not Found");
+            }
+            else
+            {
+                fullPath = Path.Join(_config["DirectoryRootPath"], parentPath);
+            }
+                
+        }
+        */
+        if (!Directory.Exists(fullPath)) throw new FileSystemException($"{path} not Found");
         string[] directories = Directory.GetDirectories(fullPath).OrderBy(f => f).ToArray();
         string[] files = Directory.GetFiles(fullPath).OrderBy(f => f).ToArray();
         List<string> allList = new List<string>();
