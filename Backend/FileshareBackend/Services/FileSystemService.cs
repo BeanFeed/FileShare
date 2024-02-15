@@ -1,6 +1,7 @@
 using FileshareBackend.Exceptions;
 using FileshareBackend.Models;
 using FileshareBackend.Services.Interfaces;
+using MimeTypes;
 
 namespace FileshareBackend.Services;
 
@@ -190,6 +191,10 @@ public class FileSystemService : IFileSystemService
 
     public void DeleteItem(string[] pathArr)
     {
+        for (int i = 0; i < pathArr.Length; i++)
+        {
+            pathArr[i] = Utils.CleanString(pathArr[i]);
+        }
         string path = "";
         try
         {
@@ -219,6 +224,10 @@ public class FileSystemService : IFileSystemService
 
     public void UploadFile(string[] pathArr, IFormFile file)
     {
+        for (int i = 0; i < pathArr.Length; i++)
+        {
+            pathArr[i] = Utils.CleanString(pathArr[i]);
+        }
         string path = "";
         try
         {
@@ -237,23 +246,6 @@ public class FileSystemService : IFileSystemService
         file.CopyTo(stream);
         
         stream.Close();
-    }
-
-    public FileStream DownloadImage(string[] pathArr)
-    {
-        string path = "";
-        try
-        {
-            
-            path = Path.Join(_config["DirectoryRootPath"], string.Join('/', pathArr));
-        }
-        catch
-        {
-            throw new FileSystemException("Failed to locate directory");
-        }
-        if (!File.Exists(path)) throw new FileSystemException("File doesn't exists");
-        
-
     }
     
     private int GetItemCount(string path)

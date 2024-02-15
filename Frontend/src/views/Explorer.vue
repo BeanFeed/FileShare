@@ -7,7 +7,6 @@ import axios from "axios";
 import FileCard from "../components/FileCard.vue";
 import {store} from "../state/state.js";
 import TextPrompt from "../components/TextPrompt.vue";
-
 const dPath = ref();
 dPath.value = [""]
 const route = useRoute();
@@ -41,10 +40,10 @@ onMounted(async () => {
 
 async function updateScreen(_props) {
   gettingData.value = "pending"
-  console.log(Config.BackendUrl + "api/v1/filesystem/getfromdirectory" + GetUrlArray("path", dPath.value))
+  console.log(Config.BackendUrl + "api/v1/filesystem/getfromdirectory" + GetUrlArray("pathArr", dPath.value))
   let req = await axios({
     method: "GET",
-    url: Config.BackendUrl + "api/v1/filesystem/getfromdirectory" + GetUrlArray("path", dPath.value)
+    url: Config.BackendUrl + "api/v1/filesystem/getfromdirectory" + GetUrlArray("pathArr", dPath.value)
 
   })
       .then(function (res) {
@@ -217,11 +216,31 @@ async function UploadItem(name) {
 
 }
 
+async function DownloadItem(name) {
+  let path = [...dPath.value];
+  path[path.length] = name;
+  let req = await axios.get(Config.BackendUrl + "api/v1/filesystem/downloadfile" + GetUrlArray("pathArr" ,path) + "&raw=false")
+      .then(function (res) {
+        console.log(res);
+        ForceFileDownload(res, name);
+      })
+}
+
 function renameFile(originalFile, newName) {
   return new File([originalFile], newName, {
     type: originalFile.type,
     lastModified: originalFile.lastModified,
   });
+}
+
+function ForceFileDownload(response, title) {
+  const url = window.URL.createObjectURL(new Blob([response.data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', title)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link);
 }
 </script>
 
@@ -235,7 +254,7 @@ function renameFile(originalFile, newName) {
           <DirectoryCard v-else :id="'dCard'+index" :dir-name="directory.name" :item-count="directory.itemCount" v-show="false"/>
         </template>
         <template v-for="(file, index) in files">
-          <FileCard v-if="index !== held.id || dPath !== held.path" :id="'fCard'+index" @delete-card="DeleteItem(file.name)" @rename-card="toBeRenamed = file.name; renaming = true;" @move-card="MoveFile(file, index)"  :file-name="file.name" />
+          <FileCard v-if="index !== held.id || dPath !== held.path" :id="'fCard'+index" @download-card="DownloadItem(file.name)" @delete-card="DeleteItem(file.name)" @rename-card="toBeRenamed = file.name; renaming = true;" @move-card="MoveFile(file, index)"  :file-name="file.name" />
           <FileCard v-else :id="'fCard'+index" :file-name="file.name" />
         </template>
       </template>

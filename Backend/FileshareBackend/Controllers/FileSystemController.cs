@@ -2,6 +2,7 @@ using FileshareBackend.Exceptions;
 using FileshareBackend.Models;
 using FileshareBackend.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using MimeTypes;
 
 namespace FileshareBackend.Controllers;
 
@@ -10,17 +11,19 @@ namespace FileshareBackend.Controllers;
 public class FileSystemController : ControllerBase
 {
     private readonly IFileSystemService _fileSystemService;
-    public FileSystemController(IFileSystemService fsS)
+    private readonly IConfiguration _config;
+    public FileSystemController(IFileSystemService fsS, IConfiguration config)
     {
         _fileSystemService = fsS;
+        _config = config;
     }
     [HttpGet]
-    public IActionResult GetFromDirectory([FromQuery]string[] path)
+    public IActionResult GetFromDirectory([FromQuery]string[] pathArr)
     {
         
         try
         {
-            FSEntryModel items = _fileSystemService.GetFromDirectory(path);
+            FSEntryModel items = _fileSystemService.GetFromDirectory(pathArr);
             ResponseModel<FSEntryModel> res = new ResponseModel<FSEntryModel>(true, items);
             return Ok(res);
         }
@@ -112,9 +115,33 @@ public class FileSystemController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult DownloadFile([FromQuery] string[] pathArr)
+    public IActionResult DownloadFile([FromQuery] string[] pathArr, [FromQuery] bool? raw)
     {
-        return Ok();
+        for (int i = 0; i < pathArr.Length; i++)
+        {
+            pathArr[i] = Utils.CleanString(pathArr[i]);
+        }
+        string path = "";
+        try
+        {
+            
+            path = Path.Join(_config["DirectoryRootPath"], string.Join('/', pathArr));
+        }
+        catch
+        {
+            return BadRequest(new ResponseModel<string>(false, "Failed to locate directory"));
+        }
+        if (!System.IO.File.Exists(path)) return BadRequest(new ResponseModel<string>(false, "File doesn't exists"));
+        var stream = System.IO.File.OpenRead(path);
+        var type = MimeTypeMap.GetMimeType(pathArr[^1]);
+        if (raw is true)
+        {
+            return File(stream, type);
+        }
+        else
+        {
+            return File(stream, type, pathArr[^1]);
+        }
     }
     
 }
