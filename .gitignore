@@ -26,4 +26,4 @@ obj/
 *.sln
 *.sw?
 package-lock.json
-/Backend/FileshareBackend/appsettings.development.json
+/Backend/FileshareBackend/appsettings.Development.json
