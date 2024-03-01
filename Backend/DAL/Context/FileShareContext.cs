@@ -6,13 +6,13 @@ using DAL.Entities;
 
 namespace DAL.Context
 {
-    public partial class MyDbContext : DbContext
+    public partial class FileShareContext : DbContext
     {
-        public MyDbContext()
+        public FileShareContext()
         {
         }
 
-        public MyDbContext(DbContextOptions<MyDbContext> options)
+        public FileShareContext(DbContextOptions<FileShareContext> options)
             : base(options)
         {
         }
@@ -23,8 +23,6 @@ namespace DAL.Context
         {
             modelBuilder.Entity<User>(entity =>
             {
-                entity.HasNoKey();
-
                 entity.ToTable("User");
 
                 entity.Property(e => e.Id).HasColumnName("id");
