@@ -33,7 +33,7 @@ public class FileSystemController : ControllerBase
             ResponseModel<FSEntryModel> res = new ResponseModel<FSEntryModel>(true, items);
             return Ok(res);
         }
-        catch (FileSystemException e)
+        catch (Exception e)
         {
             ResponseModel<string> res = new ResponseModel<string>(false, e.Message);
             return NotFound(res);
