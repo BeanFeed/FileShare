@@ -43,7 +43,8 @@ async function updateScreen() {
   console.log(Config.BackendUrl + "v1/filesystem/getfromdirectory" + GetUrlArray("pathArr", dPath.value))
   let req = await axios({
     method: "GET",
-    url: Config.BackendUrl + "v1/filesystem/getfromdirectory" + GetUrlArray("pathArr", dPath.value)
+    url: Config.BackendUrl + "v1/filesystem/getfromdirectory" + GetUrlArray("pathArr", dPath.value),
+    withCredentials: true
 
   })
       .then(async function (res) {
@@ -51,6 +52,7 @@ async function updateScreen() {
           gettingData.value = "success";
           directories.value = res.data.message.directories;
           files.value = res.data.message.files;
+          store.canEdit = res.data.message.canEdit
           console.log(directories)
           updateCount += 1;
         }
@@ -125,7 +127,8 @@ async function DropCard() {
     
     
     let req = await axios.post(Config.BackendUrl + "v1/filesystem/moveitem",data, {
-      headers: {'Content-Type': 'application/json'}
+      headers: {'Content-Type': 'application/json'},
+      withCredentials: true
     }).then(async function (res) {
       if (res.status === 200 && res.data.success === true) {
 
@@ -158,7 +161,8 @@ async function RenameItem(newName) {
     newName: newName
   }
   let req = await axios.post(Config.BackendUrl + "v1/filesystem/renameitem",data, {
-    headers: {'Content-Type': 'application/json'}
+    headers: {'Content-Type': 'application/json'},
+    withCredentials: true
   }).then(async function (res) {
     if (res.status === 200 && res.data.success === true) {
 
@@ -177,7 +181,8 @@ async function DeleteItem(name) {
   let req = await axios({
     url:Config.BackendUrl + "v1/filesystem/deleteitem",
     data: path,
-    method:"DELETE"
+    method:"DELETE",
+    withCredentials: true
   }).then(async function (res) {
     if (res.status === 200 && res.data.success === true) {
 
@@ -205,7 +210,8 @@ async function UploadItem(name) {
     headers: {
       'Content-Type' : 'multipart/form-data'
     },
-    onUploadProgress: progressEvent => ProgressUpdate(progressEvent)
+    onUploadProgress: progressEvent => ProgressUpdate(progressEvent),
+    withCredentials: true
   }).then(async function (res) {
     console.log(res.data.message);
     store.uploadedFile = null;
@@ -219,7 +225,7 @@ async function UploadItem(name) {
 async function DownloadItem(name) {
   let path = [...dPath.value];
   path[path.length] = name;
-  let req = await axios.get(Config.BackendUrl + "v1/filesystem/downloadfile" + GetUrlArray("pathArr" ,path) + "&raw=false")
+  let req = await axios.get(Config.BackendUrl + "v1/filesystem/downloadfile" + GetUrlArray("pathArr" ,path) + "&raw=false", {withCredentials: true})
       .then(function (res) {
         console.log(res);
         ForceFileDownload(res, name);
