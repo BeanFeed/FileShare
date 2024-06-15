@@ -87,7 +87,7 @@ public class UserController : ControllerBase
     {
         try
         {
-            var user = await _userService.GetMe(HttpContext);
+            var user = await _userService.GetMe(Request.Cookies["fsAuth"]!);
             return Ok(new ResponseModel<User>(true, user));
         }
         catch(UserException e)

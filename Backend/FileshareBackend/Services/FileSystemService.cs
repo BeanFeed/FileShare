@@ -449,7 +449,7 @@ public class FileSystemService : IFileSystemService
     }
     private int GetItemCount(string path)
     {
-        return Directory.GetFileSystemEntries(path).Length;
+        return Directory.GetFileSystemEntries(path).Length - 1;
     }
     
     

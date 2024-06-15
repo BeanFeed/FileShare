@@ -7,5 +7,5 @@ public interface IUserService
 {
     public Task<string> Register(UserLoginModel userInfo);
     public Task<string> Login(UserLoginModel userInfo);
-    public Task<User> GetMe(HttpContext ctx);
+    public Task<User> GetMe(string ctx);
 }

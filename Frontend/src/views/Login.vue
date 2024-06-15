@@ -3,6 +3,7 @@ import {useRoute, useRouter} from "vue-router";
 import {BackendUrl} from "../config.json";
 import {ref} from "vue";
 import axios from "axios";
+import {store} from "../state/state.js";
 
 var username = ref();
 var password = ref();
@@ -13,7 +14,7 @@ function sendLoginPost() {
     console.log("Redirect Failed")
     return;
   }
-
+  var success = false
   var req = axios.post(BackendUrl + "v1/user/login", {
     username: username.value,
     password: password.value
@@ -22,6 +23,8 @@ function sendLoginPost() {
   }).catch(() => {
     
   });
+
+
 }
 </script>
 
@@ -39,7 +42,7 @@ function sendLoginPost() {
       <div class="formInput text-left">
         <p>Password</p>
         <div class="bg-slate-800 w-full px-3 py-1">
-          <input v-model="password" type="text" class=" bg-slate-800 focus:outline-none w-full">
+          <input v-model="password" type="password" class=" bg-slate-800 focus:outline-none w-full">
         </div>
       </div>
       <hr>

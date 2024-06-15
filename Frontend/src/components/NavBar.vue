@@ -6,6 +6,8 @@ import {onMounted, ref, watch, watchEffect} from "vue";
 import Explorer from "../views/Explorer.vue";
 import {onClickOutside} from "@vueuse/core";
 import {store} from "../state/state.js";
+import axios from "axios";
+import {BackendUrl, CanRegister} from "../config.json";
 
 const route = useRoute();
 const dPath = ref();
@@ -13,20 +15,41 @@ const pathName = ref();
 const dropdown = ref(null);
 const upload = ref(null);
 const fileInput = ref(null);
+
 watchEffect(() => {
   dPath.value = route.params.Directory;
   pathName.value = route.name;
-})
+  console.log(store.user)
 
+
+})
+const loginMenu = ref();
+loginMenu.value = true;
+watch(store, () => {
+  loginMenu.value = store.user == null;
+
+});
 //console.log(this.route.query.params)
 let open = ref();
 open.value = false;
+let loginOpen = ref(null);
+let profileButton = ref();
+loginOpen.value = false;
 let isLoading = ref(true);
 onMounted(() => {
   isLoading.value = false;
   onClickOutside(dropdown, event => {
     if (open.value === true) open.value = false;
-  })
+  });
+
+  onClickOutside(profileButton, event => {
+    loginOpen.value = false;
+  });
+
+  var userReq = axios.get(BackendUrl + "v1/user/me", {withCredentials: true}).then((res) => {
+    store.user = res.data.message;
+
+  }).catch(() =>{});
 })
 function GoBack(amount) {
   let newP = [...dPath.value];
@@ -44,7 +67,19 @@ function OpenFilePrompt() {
   console.log(fileInput.value.click())
 }
 
+function OpenLogin() {
+  router.push("/Login?returnUrl=" + encodeURI(window.location.href));
+}
 
+function OpenSignup() {
+  router.push("/Register?returnUrl=" + encodeURI(window.location.href));
+}
+
+function Signout() {
+  var req = axios.get(BackendUrl + "v1/user/signout", {withCredentials: true});
+  store.user = null;
+  location.reload();
+}
 </script>
 
 
@@ -106,8 +141,17 @@ function OpenFilePrompt() {
           </li>
         </ul>
       </div>
-      <div class="ml-4">
-        <i class="text-3xl bi bi-person-circle" />
+      <div class="ml-4 relative text-left inline-flex flex-col">
+        <i ref="profileButton" class="text-3xl bi bi-person-circle cursor-pointer" @click="loginOpen = !loginOpen"/>
+        <div v-if="loginOpen" class="absolute right-0 w-32 mt-9 bg-slate-950 border-teal-500 border-2 rounded-lg">
+          <template v-if="store.user == null">
+            <a @click="OpenLogin()" class="cursor-pointer text-teal-400 hover:text-teal-400 hover:bg-white hover:bg-opacity-10 block border-b border-teal-500 text-center">Login</a>
+            <a @click="OpenSignup()" class="cursor-pointer text-teal-400 hover:text-teal-400 hover:bg-white hover:bg-opacity-10 block border-t border-teal-500 text-center" v-show="CanRegister">Signup</a>
+          </template>
+          <template v-else>
+            <a @click="Signout()" class="cursor-pointer text-teal-400 hover:text-teal-400 hover:bg-white hover:bg-opacity-10 block border-teal-500 text-center">Signout</a>
+          </template>
+        </div>
       </div>
     </div>
     

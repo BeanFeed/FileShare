@@ -15,8 +15,8 @@ function sendLoginPost() {
   }
 
   var req = axios.post(BackendUrl + "v1/user/register", {
-    username: username,
-    password: password
+    username: username.value,
+    password: password.value
   }, {withCredentials: true}).then((res) => {
     if (res.data.success) window.location.href = decodeURI(route.query.returnUrl);
   }).catch(() => {
@@ -27,19 +27,19 @@ function sendLoginPost() {
 
 <template>
   <div class="flex items-center justify-center py-auto h-screen">
-    <div class="cBorder w-96 p-10 bg-slate-900">
+    <div class="cBorder w-96 p-10 bg-slate-850">
       <h1 class="text-center">Signup</h1>
       <hr>
       <div class="formInput text-left">
         <p>Username</p>
         <div class="bg-slate-800 w-full px-3 py-1">
-          <input v-bind:value="username" type="text" class=" bg-slate-800 focus:outline-none w-full">
+          <input v-model="username" type="text" class=" bg-slate-800 focus:outline-none w-full">
         </div>
       </div>
       <div class="formInput text-left">
         <p>Password</p>
         <div class="bg-slate-800 w-full px-3 py-1">
-          <input v-bind:value="password" type="text" class=" bg-slate-800 focus:outline-none w-full">
+          <input v-model="password" type="password" class=" bg-slate-800 focus:outline-none w-full">
         </div>
       </div>
       <hr>

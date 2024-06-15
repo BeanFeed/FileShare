@@ -84,11 +84,11 @@ public class UserService : IUserService
 
     
 
-    public async Task<User> GetMe(HttpContext ctx)
+    public async Task<User> GetMe(string ctx)
     {
         try
         {
-            var user = await _jwtService.DecodeToken(ctx.Request.Cookies["fsAuth"]!);
+            var user = await _jwtService.DecodeToken(ctx);
             user.Passhash = null!;
             return user;
         }

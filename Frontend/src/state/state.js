@@ -4,5 +4,6 @@ export const store = reactive({
     dropFired: false,
     cardHeld: false,
     uploadedFile: null,
-    canEdit: false
+    canEdit: false,
+    user: null
 })

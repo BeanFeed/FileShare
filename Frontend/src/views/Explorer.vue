@@ -7,6 +7,7 @@ import axios from "axios";
 import FileCard from "../components/FileCard.vue";
 import {store} from "../state/state.js";
 import TextPrompt from "../components/TextPrompt.vue";
+import CardProperties from "../components/CardProperties.vue";
 const dPath = ref();
 dPath.value = [""]
 const route = useRoute();
@@ -18,6 +19,7 @@ var renaming = ref(false);
 var dCardList = ref([]);
 var fCardList = ref([]);
 var fileInputName = ref('');
+let cardPropertyEdit = ref(null);
 watchEffect(async () => {
   
   dPath.value = route.params.Directory === undefined ? [] : route.params.Directory;
@@ -272,6 +274,7 @@ function ForceFileDownload(response, title) {
     </div>
     <TextPrompt v-show="renaming" prompt-message="Rename this file" @cancel="toBeRenamed = -1; renaming = false;" @input="async (e) => RenameItem(e)"/>
     <TextPrompt v-show="store.uploadedFile !== null" prompt-message="Name for this file?" :def-name="fileInputName" @cancel="store.uploadedFile = null;" @input="async (e) => UploadItem(e)" :output-type="uploading ? 'progress' : null" :output-value="uploadProgress"/>
+    <CardProperties v-show="cardPropertyEdit !== null" :def-name="cardPropertyEdit.name" />
   </div>
   
 

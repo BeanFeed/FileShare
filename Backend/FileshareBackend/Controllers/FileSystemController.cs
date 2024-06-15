@@ -26,9 +26,16 @@ public class FileSystemController : ControllerBase
         
         try
         {
-            User? user = Request.Cookies["fsAuth"] != null
-                ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"])
-                : null;
+            User? user = null;
+            try
+            {
+                user = Request.Cookies["fsAuth"] != null
+                    ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"]!)
+                    : null;
+            }
+            catch (Exception e)
+            {
+            }
             FSEntryModel items = _fileSystemService.GetFromDirectory(pathArr, user);
             ResponseModel<FSEntryModel> res = new ResponseModel<FSEntryModel>(true, items);
             return Ok(res);
@@ -157,9 +164,17 @@ public class FileSystemController : ControllerBase
         {
             return BadRequest(new ResponseModel<string>(false, "Failed to locate directory"));
         }
-        User? user = Request.Cookies["fsAuth"] != null
-            ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"]!)
-            : null;
+        User? user = null;
+        try
+        {
+            user = Request.Cookies["fsAuth"] != null
+                ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"]!)
+                : null;
+        }
+        catch (Exception e)
+        {
+        }
+
         if (!_fileSystemService.CanDownload(pathArr, user)) return Unauthorized();
         if (!System.IO.File.Exists(path)) return BadRequest(new ResponseModel<string>(false, "File doesn't exists"));
         var stream = System.IO.File.OpenRead(path);
