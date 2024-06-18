@@ -5,5 +5,7 @@ export const store = reactive({
     cardHeld: false,
     uploadedFile: null,
     canEdit: false,
-    user: null
+    cardPropertyEdit: null,
+    user: null,
+    overflow: 'visible'
 })

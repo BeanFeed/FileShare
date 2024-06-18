@@ -1,5 +1,6 @@
 using DAL.Context;
 using FileshareBackend;
+using FileshareBackend.Models.Settings;
 using FileshareBackend.Services;
 using FileshareBackend.Services.Interfaces;
 using Microsoft.AspNetCore.Http.Features;
@@ -8,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<GeneralSettings>(builder.Configuration.GetSection("GeneralSettings"));
 var myCors = "cors";
 var config = builder.Configuration;
 Utils.InitiateMeta(config);
@@ -37,7 +41,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddDbContext<FileShareContext>(o=>
-    o.UseSqlite(builder.Configuration.GetValue<string>("Database_ConnectionString"))
+    o.UseSqlite(builder.Configuration.GetValue<string>("GeneralSettings:DatabaseConnectionString"))
 );
 
 

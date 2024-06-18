@@ -19,11 +19,10 @@ var renaming = ref(false);
 var dCardList = ref([]);
 var fCardList = ref([]);
 var fileInputName = ref('');
-let cardPropertyEdit = ref(null);
+let overflow = ref('visible');
 watchEffect(async () => {
   
   dPath.value = route.params.Directory === undefined ? [] : route.params.Directory;
-  //console.log("change")
   await updateScreen();
   
 });
@@ -32,6 +31,10 @@ watch(store,async ()=>{
     store.dropFired = false;
     await DropCard();
   } else if (store.uploadedFile !== null) fileInputName.value = store.uploadedFile.name;
+});
+
+watch(store.cardPropertyEdit, async () =>{
+  //if (store.cardPropertyEdit === undefined || store.cardPropertyEdit === null) await updateScreen();
 });
 
 onMounted(async () => {
@@ -58,7 +61,7 @@ async function updateScreen() {
           console.log(directories)
           updateCount += 1;
         }
-      })
+      }).catch(res => {});
 }
 function GetUrlArray(varname, arr) {
   var url = "?" + varname
@@ -137,6 +140,8 @@ async function DropCard() {
         console.log(res.data.message)
         await updateScreen();
       }
+    }).catch(res => {
+      console.log(res.response)
     })
   }
   
@@ -150,7 +155,8 @@ async function DropCard() {
   };
 }
 
-async function RenameItem(newName) {
+/*
+async function RenameItem(oldName, newName) {
   let oldPath = [...dPath.value];
   if (oldPath[0] === ""){
     oldPath = [toBeRenamed.value];
@@ -171,29 +177,11 @@ async function RenameItem(newName) {
       console.log(res.data.message)
       await updateScreen();
     }
-  })
+  }).catch();
   toBeRenamed.value = -1;
   renaming.value = false;
 }
-
-async function DeleteItem(name) {
-  let path = [...dPath.value];
-  if(path[0] === "") path = [name];
-  else path[path.length] = name;
-  let req = await axios({
-    url:Config.BackendUrl + "v1/filesystem/deleteitem",
-    data: path,
-    method:"DELETE",
-    withCredentials: true
-  }).then(async function (res) {
-    if (res.status === 200 && res.data.success === true) {
-
-      console.log(res.data.message)
-      await updateScreen();
-    }
-  })
-}
-
+*/
 let uploadProgress = ref(0);
 let uploading = ref(false);
 function ProgressUpdate(data) {
@@ -220,7 +208,7 @@ async function UploadItem(name) {
     uploadProgress.value = 0;
     uploading.value = false;
     await updateScreen();
-  });
+  }).catch(res => {});
 
 }
 
@@ -231,7 +219,7 @@ async function DownloadItem(name) {
       .then(function (res) {
         console.log(res);
         ForceFileDownload(res, name);
-      })
+      }).catch(res => {});
 }
 
 function renameFile(originalFile, newName) {
@@ -250,31 +238,49 @@ function ForceFileDownload(response, title) {
   link.click()
   document.body.removeChild(link);
 }
+
+function OpenProperties(name, isDir) {
+  let oldPath = [...dPath.value];
+  if (oldPath[0] === ""){
+    oldPath = [name];
+  } else {
+    oldPath[oldPath.length] = name;
+  }
+  
+  store.cardPropertyEdit = {
+    path: oldPath,
+    name: name,
+    isDirectory: isDir
+  };
+  
+  store.overflow = 'hidden';
+}
 </script>
 
 <template>
-  <div class="flex justify-center px-5 pt-6">
+  <div class="flex justify-center px-5 pt-6" :style="{overflow: overflow}">
     <div id="mainBox"  class="mx-auto grid place-items-center grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 2.5xl:grid-cols-7 gap-4">
       <template v-if="gettingData === 'success'" :key="updateCount">
 
         <template v-for="(directory, index) in directories" :key="index">
-          <DirectoryCard v-if="index !== held.id || dPath !== held.path"  :id="'dCard'+index" @delete-card="DeleteItem(directory.name)" @rename-card="toBeRenamed = directory.name; renaming = true;" @move-card="MoveDir(directory, index)" :dir-name="directory.name" :item-count="directory.itemCount" />
+          <DirectoryCard v-if="index !== held.id || dPath !== held.path" :can-edit="directory.canEdit" :id="'dCard'+index" @delete-card="DeleteItem(directory.name)" @rename-card="toBeRenamed = directory.name; renaming = true;" @move-card="MoveDir(directory, index)" :dir-name="directory.name" @open-properties="OpenProperties(directory.name, true)" :item-count="directory.itemCount" />
           <DirectoryCard v-else :id="'dCard'+index" :dir-name="directory.name" :item-count="directory.itemCount" v-show="false"/>
         </template>
         <template v-for="(file, index) in files">
-          <FileCard v-if="index !== held.id || dPath !== held.path" :id="'fCard'+index" @download-card="DownloadItem(file.name)" @delete-card="DeleteItem(file.name)" @rename-card="toBeRenamed = file.name; renaming = true;" @move-card="MoveFile(file, index)"  :file-name="file.name" />
+          <FileCard v-if="index !== held.id || dPath !== held.path" :can-edit="file.canEdit" :id="'fCard'+index" @download-card="DownloadItem(file.name)" @rename-card="toBeRenamed = file.name; renaming = true;" @move-card="MoveFile(file, index)" @open-properties="OpenProperties(file.name, false)"  :file-name="file.name" />
           <FileCard v-else :id="'fCard'+index" :file-name="file.name" />
         </template>
       </template>
 
     </div>
-    <div id="pickupBox" class="absolute left-3 top-16">
+    <div id="pickupBox" class="fixed left-3 top-16">
       <DirectoryCard v-if="held.type === 'directory' && held.show" :id="'dCard' + held.id" :dir-name="held.name" :item-count="held.itemCount" :is-held="true"/>
       <FileCard v-if="held.type === 'file' && held.show" :id="'fCard' + held.id" :file-name="held.name" :is-held="true"/>
     </div>
     <TextPrompt v-show="renaming" prompt-message="Rename this file" @cancel="toBeRenamed = -1; renaming = false;" @input="async (e) => RenameItem(e)"/>
     <TextPrompt v-show="store.uploadedFile !== null" prompt-message="Name for this file?" :def-name="fileInputName" @cancel="store.uploadedFile = null;" @input="async (e) => UploadItem(e)" :output-type="uploading ? 'progress' : null" :output-value="uploadProgress"/>
-    <CardProperties v-show="cardPropertyEdit !== null" :def-name="cardPropertyEdit.name" />
+    <CardProperties  v-show="store.cardPropertyEdit !== null" :is-dir="store.cardPropertyEdit !== null ? store.cardPropertyEdit.isDirectory : null" :def-name="store.cardPropertyEdit !== null ? store.cardPropertyEdit.name : ''" />
+    
   </div>
   
 

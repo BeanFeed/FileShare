@@ -8,7 +8,7 @@ import { CanRegister } from "../config.json"
 const routes = [
     {
         path: "/",
-        redirect: "/Login"
+        redirect: "/Home"
     },
     {
         path:"/Home",

@@ -10,16 +10,22 @@ var password = ref();
 var route = useRoute()
 var router = useRouter();
 function sendLoginPost() {
-  if (route.query.returnUrl === undefined) {
-    console.log("Redirect Failed")
-    return;
-  }
+  
   var success = false
   var req = axios.post(BackendUrl + "v1/user/login", {
     username: username.value,
     password: password.value
   }, {withCredentials: true}).then((res) => {
-    if (res.data.success) window.location.href = decodeURI(route.query.returnUrl);
+    if (res.data.success) {
+      console.log(route.query.returnUrl)
+      if (route.query.returnUrl === undefined)
+        console.log(route.query.returnUrl)
+        window.location.href = window.location.origin;
+      } else {
+        console.log(route.query.returnUrl)
+        console.log("Redirect")
+        window.location.href = decodeURI(route.query.returnUrl);
+      }
   }).catch(() => {
     
   });
@@ -29,26 +35,29 @@ function sendLoginPost() {
 </script>
 
 <template>
-  <div class="flex items-center justify-center py-auto h-screen">
-    <div class="cBorder w-96 p-10 bg-slate-850">
-      <h1 class="text-center">Login</h1>
-      <hr>
-      <div class="formInput text-left">
-        <p>Username</p>
-        <div class="bg-slate-800 w-full px-3 py-1">
-          <input v-model="username" type="text" class=" bg-slate-800 focus:outline-none w-full">
+  <div class="overflow-hidden">
+    <div class="flex items-center justify-center py-auto h-[calc(100vh-3.5rem)]">
+      <div class="cBorder w-96 p-10 bg-slate-850">
+        <h1 class="text-center">Login</h1>
+        <hr>
+        <div class="formInput text-left">
+          <p>Username</p>
+          <div class="bg-slate-800 w-full px-3 py-1">
+            <input v-model="username" type="text" class=" bg-slate-800 focus:outline-none w-full">
+          </div>
         </div>
-      </div>
-      <div class="formInput text-left">
-        <p>Password</p>
-        <div class="bg-slate-800 w-full px-3 py-1">
-          <input v-model="password" type="password" class=" bg-slate-800 focus:outline-none w-full">
+        <div class="formInput text-left">
+          <p>Password</p>
+          <div class="bg-slate-800 w-full px-3 py-1">
+            <input v-model="password" type="password" class=" bg-slate-800 focus:outline-none w-full">
+          </div>
         </div>
+        <hr>
+        <button @click="sendLoginPost()" class="btn-grad w-full focus:outline-none">Continue</button>
       </div>
-      <hr>
-      <button @click="sendLoginPost()" class="btn-grad w-full focus:outline-none">Continue</button>
     </div>
   </div>
+  
 </template>
 
 <style scoped>

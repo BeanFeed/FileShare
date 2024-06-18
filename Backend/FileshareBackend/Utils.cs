@@ -22,22 +22,21 @@ public class Utils
         return dirtyString != null ? dirtyString.Replace("..", "") : "";
     }
     
-    public static SameSiteMode GetSSM(IConfiguration config)
+    public static SameSiteMode GetSSM(string ssm)
     {
-        var ssm = config["SSM"];
         if (ssm == null || ssm.ToLower() == "none") return SameSiteMode.None;
         else return SameSiteMode.Lax;
     }
 
     public static void InitiateMeta(IConfiguration config)
     {
-        var path = config["DirectoryRootPath"];
+        var path = config["GeneralSettings:DirectoryRootPath"];
         GenerateMeta(path, config);
     }
 
     private static void GenerateMeta(string path, IConfiguration config)
     {
-        FSEntryModel entries = new FileSystemService(config).GetFromDirectory(path);
+        FSEntryModel entries = new FileSystemService().GetFromDirectory(path);
         if (!File.Exists(Path.Join(path, "fsmeta.json")))
         {
             List<ItemMeta> DirectoryMetas = new List<ItemMeta>();
@@ -70,6 +69,7 @@ public class Utils
                 Type = "FileShareMeta",
                 Owner = "root",
                 Visibility = "public",
+                AnyCanUpload = false,
                 Directories = DirectoryMetas.ToArray(),
                 Files = FileMetas.ToArray()
             };

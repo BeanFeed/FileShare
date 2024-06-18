@@ -5,7 +5,8 @@ namespace FileshareBackend.Services.Interfaces;
 
 public interface IUserService
 {
-    public Task<string> Register(UserLoginModel userInfo);
-    public Task<string> Login(UserLoginModel userInfo);
+    public Task<string[]> Register(UserLoginModel userInfo);
+    public Task<string[]> Login(UserLoginModel userInfo);
+    public Task<string[]> Refresh(string rToken);
     public Task<User> GetMe(string ctx);
 }

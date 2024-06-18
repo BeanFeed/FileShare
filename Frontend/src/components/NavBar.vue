@@ -49,8 +49,15 @@ onMounted(() => {
   var userReq = axios.get(BackendUrl + "v1/user/me", {withCredentials: true}).then((res) => {
     store.user = res.data.message;
 
-  }).catch(() =>{});
+  }).catch(() =>{
+    
+  });
 })
+
+function GetUser() {
+  
+}
+
 function GoBack(amount) {
   let newP = [...dPath.value];
   for (var i = newP.length; i !== amount+1; i--){
@@ -76,9 +83,11 @@ function OpenSignup() {
 }
 
 function Signout() {
-  var req = axios.get(BackendUrl + "v1/user/signout", {withCredentials: true});
-  store.user = null;
-  location.reload();
+  var req = axios.get(BackendUrl + "v1/user/signout", {withCredentials: true}).then(() => {
+    store.user = null;
+    location.reload();
+  });
+  
 }
 </script>
 
@@ -105,7 +114,7 @@ function Signout() {
             </li>
           </template>
           <li v-if="store.canEdit">
-            <div class="container flex items-center">
+            <div class="flex items-center">
               <div class="relative text-left inline-flex flex-col w-32">
                 <a ref="dropdown" @click="open = !open" class="cursor-pointer bg-teal-500 text-slate-900 text-3xl rounded-lg items-center justify-center w-7 h-7 flex hover:text-slate-900 hover:bg-teal-600">
                   <i class="bi bi-plus"></i>
@@ -141,6 +150,7 @@ function Signout() {
           </li>
         </ul>
       </div>
+      <p v-if="store.user !== null">Hello, {{store.user.username}}</p>
       <div class="ml-4 relative text-left inline-flex flex-col">
         <i ref="profileButton" class="text-3xl bi bi-person-circle cursor-pointer" @click="loginOpen = !loginOpen"/>
         <div v-if="loginOpen" class="absolute right-0 w-32 mt-9 bg-slate-950 border-teal-500 border-2 rounded-lg">

@@ -1,8 +1,10 @@
 using DAL.Entities;
 using FileshareBackend.Exceptions;
 using FileshareBackend.Models;
+using FileshareBackend.Models.Settings;
 using FileshareBackend.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using MimeTypes;
 
 namespace FileshareBackend.Controllers;
@@ -13,12 +15,12 @@ public class FileSystemController : ControllerBase
 {
     private readonly IFileSystemService _fileSystemService;
     private readonly IJwtService _jwtService;
-    private readonly IConfiguration _config;
-    public FileSystemController(IFileSystemService fsS, IJwtService jwtService, IConfiguration config)
+    private readonly GeneralSettings _generalSettings;
+    public FileSystemController(IFileSystemService fsS, IJwtService jwtService, IOptions<GeneralSettings> generalSettings)
     {
         _fileSystemService = fsS;
         _jwtService = jwtService;
-        _config = config;
+        _generalSettings = generalSettings.Value;
     }
     [HttpGet]
     public async Task<IActionResult> GetFromDirectory([FromQuery]string[] pathArr)
@@ -30,7 +32,7 @@ public class FileSystemController : ControllerBase
             try
             {
                 user = Request.Cookies["fsAuth"] != null
-                    ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"]!)
+                    ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"]!, false)
                     : null;
             }
             catch (Exception e)
@@ -48,6 +50,26 @@ public class FileSystemController : ControllerBase
         
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetItemProperties([FromQuery]ItemPropertiesReqModel item)
+    {
+        try
+        {
+            User? user = Request.Cookies["fsAuth"] != null
+                ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"], false)
+                : null;
+            if (user is null) return Unauthorized();
+            var properties = _fileSystemService.GetItemProperties(item.pathArr, item.isDirectory, user);
+            return Ok(new ResponseModel<ItemPropertiesResModel>(true, properties));
+
+        }
+        catch (FileSystemException e)
+        {
+            ResponseModel<string> res = new ResponseModel<string>(false, e.Message);
+            return BadRequest(res);
+        }
+    }
+
     [HttpPost]
     public async Task<IActionResult> MoveItem(MoveItemModel data)
     {
@@ -56,7 +78,7 @@ public class FileSystemController : ControllerBase
             try
             {
                 User? user = Request.Cookies["fsAuth"] != null
-                    ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"])
+                    ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"], false)
                     : null;
                 if (user is null) return Unauthorized();
                 _fileSystemService.MoveFile(data.oldPath, data.newPath, data.itemName, user, data.overwrite);
@@ -74,7 +96,7 @@ public class FileSystemController : ControllerBase
             try
             {
                 User? user = Request.Cookies["fsAuth"] != null
-                    ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"])
+                    ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"], false)
                     : null;
                 if (user is null) return Unauthorized();
                 _fileSystemService.MoveDirectory(data.oldPath, data.newPath, user);
@@ -94,7 +116,7 @@ public class FileSystemController : ControllerBase
         try
         {
             User? user = Request.Cookies["fsAuth"] != null
-                ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"])
+                ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"], false)
                 : null;
             if (user is null) return Unauthorized();
             _fileSystemService.RenameItem(data.ItemPath, data.NewName, user);
@@ -115,7 +137,7 @@ public class FileSystemController : ControllerBase
         try
         {
             User? user = Request.Cookies["fsAuth"] != null
-                ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"])
+                ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"], false)
                 : null;
             if (user is null) return Unauthorized();
             _fileSystemService.DeleteItem(path, user);
@@ -135,7 +157,7 @@ public class FileSystemController : ControllerBase
         try
         {
             User? user = Request.Cookies["fsAuth"] != null
-                ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"])
+                ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"], false)
                 : null;
             if (user is null) return Unauthorized();
             _fileSystemService.UploadFile(uploadModel.Path, uploadModel.File, user);
@@ -158,7 +180,7 @@ public class FileSystemController : ControllerBase
         try
         {
             
-            path = Path.Join(_config["DirectoryRootPath"], string.Join('/', pathArr));
+            path = Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', pathArr));
         }
         catch
         {
@@ -168,7 +190,7 @@ public class FileSystemController : ControllerBase
         try
         {
             user = Request.Cookies["fsAuth"] != null
-                ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"]!)
+                ? await _jwtService.DecodeToken(Request.Cookies["fsAuth"]!, false)
                 : null;
         }
         catch (Exception e)
@@ -190,16 +212,30 @@ public class FileSystemController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult ChangeItemVisibility(string[] pathArr, string visibility)
+    public IActionResult ChangeItemVisibility(ItemVisibilityModel item)
     {
         try
         {
-            _fileSystemService.ChangeItemVisibility(pathArr, visibility);
-            return Ok(new ResponseModel<string>(true, "Visibility changed"));
+            _fileSystemService.ChangeItemVisibility(item.pathArr, item.visibility);
+            return Ok(new ResponseModel<string>(true, "Visibility Updated"));
         }
         catch (FileSystemException e)
         {
             return BadRequest(new ResponseModel<string>(false, e.Message));
+        }
+    }
+
+    [HttpPost]
+    public IActionResult ChangePublicUploading(PublicUploadingModel model)
+    {
+        try
+        {
+            _fileSystemService.ChangePublicUploading(model.pathArr, model.anyoneCanUpload);
+            return Ok(new ResponseModel<string>(true, "Public Uploading Updated"));
+        }
+        catch (FileSystemException e)
+        {
+            return BadRequest(new ResponseModel<string>(true, e.Message));
         }
     }
     

@@ -3,17 +3,25 @@ using System.Text.Json;
 using DAL.Entities;
 using FileshareBackend.Exceptions;
 using FileshareBackend.Models;
+using FileshareBackend.Models.Settings;
 using FileshareBackend.Services.Interfaces;
+using Microsoft.Extensions.Options;
 
 namespace FileshareBackend.Services;
 
 public class FileSystemService : IFileSystemService
 {
-    private readonly IConfiguration _config;
-    public FileSystemService(IConfiguration config)
+    private readonly GeneralSettings _generalSettings;
+    public FileSystemService(IOptions<GeneralSettings> generalSettings)
     {
-        _config = config;
+        _generalSettings = generalSettings.Value;
     }
+
+    public FileSystemService()
+    {
+        _generalSettings = new GeneralSettings();
+    }
+
     public FSEntryModel GetFromDirectory(string[] pathArr, User? user)
     {
         for (int i = 0; i < pathArr.Length; i++)
@@ -38,17 +46,17 @@ public class FileSystemService : IFileSystemService
             throw new FileSystemException("Failed to locate directory");
         }
         
-        string fullPath = Path.Join(_config["DirectoryRootPath"], path);
+        string fullPath = Path.Join(_generalSettings.DirectoryRootPath, path);
         /*
         if (!Directory.Exists(fullPath))
         {
-            if (!Directory.Exists(Path.Join(_config["DirectoryRootPath"], parentPath)) || !File.Exists(fullPath))
+            if (!Directory.Exists(Path.Join(_generalSettings.DirectoryRootPath, parentPath)) || !File.Exists(fullPath))
             {
                 throw new FileSystemException($"{path} not Found");
             }
             else
             {
-                fullPath = Path.Join(_config["DirectoryRootPath"], parentPath);
+                fullPath = Path.Join(_generalSettings.DirectoryRootPath, parentPath);
             }
                 
         }
@@ -67,23 +75,26 @@ public class FileSystemService : IFileSystemService
         }
         catch (FileSystemException e)
         {
-            throw e;
+            throw;
         }
 
         entries.CanEdit = user != null && meta.Owner == user.Username;
-        
+
+        if (!entries.CanEdit && meta.AnyCanUpload) entries.CanEdit = true;
+            
         if (meta.Visibility == "private" && (user != null && user.Username != meta.Owner))
             throw new FileSystemException("Unauthorized");
         for (int i = 0; i < directories.Length; i++)
         {
             string[] folders = directories[i].Split('/');
-            string name = folders[folders.Length - 1];
+            string name = folders[^1];
             var dirMeta = meta.Directories.FirstOrDefault(x => x.Name == name);
-            if((dirMeta.Visibility == "private" || dirMeta.Visibility == "unlisted") && (user != null && user.Username != dirMeta.Owner)) continue;
+            if((dirMeta?.Visibility == "private" || dirMeta?.Visibility == "unlisted") && (user != null && user.Username != dirMeta.Owner)) continue;
             DirectoryModel directory = new DirectoryModel()
             {
                 Name = name,
-                ItemCount = GetItemCount(directories[i])
+                ItemCount = GetItemCount(directories[i]),
+                CanEdit = user?.Username == dirMeta?.Owner
             };
             entries.Directories.Add(directory);
         }
@@ -100,7 +111,8 @@ public class FileSystemService : IFileSystemService
             }
             FileModel file = new FileModel()
             {
-                Name = name
+                Name = name,
+                CanEdit = user?.Username == fileMeta.Owner
             };
             
             entries.Files.Add(file);
@@ -116,13 +128,12 @@ public class FileSystemService : IFileSystemService
         
         string[] directories = Directory.GetDirectories(path).OrderBy(f => f).ToArray();
         string[] files = Directory.GetFiles(path).OrderBy(f => f).ToArray();
-        List<string> allList = new List<string>();
         FSEntryModel entries = new FSEntryModel();
         
         for (int i = 0; i < directories.Length; i++)
         {
             string[] folders = directories[i].Split('/');
-            string name = folders[folders.Length - 1];
+            string name = folders[^1];
             DirectoryModel directory = new DirectoryModel()
             {
                 Name = name,
@@ -134,7 +145,7 @@ public class FileSystemService : IFileSystemService
         for (int i = 0; i < files.Length; i++)
         {
             string[] split = files[i].Split('/');
-            string name = split[split.Length - 1];
+            string name = split[^1];
             FileModel file = new FileModel()
             {
                 Name = name
@@ -147,6 +158,56 @@ public class FileSystemService : IFileSystemService
 
     }
 
+    public ItemPropertiesResModel GetItemProperties(string[] pathArr, bool isDirectory, User? user)
+    {
+        string fullPath = Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', pathArr));
+        if (isDirectory)
+        {
+            if (GetDirectoryOwner(pathArr) == user.Username)
+            {
+                MetaFileModel meta;
+
+                try
+                {
+                    meta = GetMeta(Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', pathArr)));
+                }
+                catch (FileSystemException e)
+                {
+                    throw;
+                }
+                
+                var res = new ItemPropertiesResModel()
+                {
+                    Name = pathArr[^1],
+                    Visibility = GetItemVisibility(pathArr, isDirectory),
+                    AnyoneCanUpload = meta.AnyCanUpload 
+                };
+                return res;
+            }
+            else
+            {
+                throw new FileSystemException("Unauthorized");
+            }
+        }
+        else
+        {
+            if (GetFileOwner(pathArr) == user.Username)
+            {
+                var res = new ItemPropertiesResModel()
+                {
+                    Name = pathArr[^1],
+                    Visibility = GetItemVisibility(pathArr, isDirectory)
+                };
+                return res;
+            }
+            else
+            {
+                throw new FileSystemException("Unauthorized");
+            }
+        }
+
+    }
+    
     public void MoveFile(string[] pathArr, string[] newPathArr, string name, User user, bool overwrite)
     {
         if (user == null) throw new FileSystemException("Unauthorized");
@@ -154,7 +215,7 @@ public class FileSystemService : IFileSystemService
         {
             pathArr[i] = Utils.CleanString(pathArr[i]);
         }
-        if (!OwnsItem(pathArr == null ? new string[] {name} : pathArr.Append(name).ToArray(), user.Username, true)) throw new FileSystemException("Unauthorized");
+        if (!OwnsItem(pathArr.Append(name).ToArray(), user.Username, true)) throw new FileSystemException("Unauthorized");
 
         string path = "";
         try
@@ -180,9 +241,9 @@ public class FileSystemService : IFileSystemService
             throw new FileSystemException("Failed to locate directory");
         }
 
-        newPath = Path.Join(_config["DirectoryRootPath"], newPath, name);
-        var meta = GetMeta(Path.Join(_config["DirectoryRootPath"], path));
-        path = Path.Join(_config["DirectoryRootPath"], path, name);
+        newPath = Path.Join(_generalSettings.DirectoryRootPath, newPath, name);
+        
+        path = Path.Join(_generalSettings.DirectoryRootPath, path, name);
         if (!overwrite && File.Exists(newPath)) throw new FileSystemException("File exists in new location");
         File.Move(path, newPath, overwrite);
         RemoveMeta(pathArr.Append(name).ToArray(), true);
@@ -223,8 +284,8 @@ public class FileSystemService : IFileSystemService
         }
 
         
-        newPath = Path.Join(_config["DirectoryRootPath"], newPath);
-        path = Path.Join(_config["DirectoryRootPath"], path);
+        newPath = Path.Join(_generalSettings.DirectoryRootPath, newPath);
+        path = Path.Join(_generalSettings.DirectoryRootPath, path);
         try
         {
             Directory.Move(path, newPath);
@@ -269,8 +330,8 @@ public class FileSystemService : IFileSystemService
             throw new FileSystemException("Failed to locate directory");
         }
 
-        oldPath = Path.Join(_config["DirectoryRootPath"], oldPath);
-        newPath = Path.Join(_config["DirectoryRootPath"], newPath);
+        oldPath = Path.Join(_generalSettings.DirectoryRootPath, oldPath);
+        newPath = Path.Join(_generalSettings.DirectoryRootPath, newPath);
         if (Directory.Exists(oldPath) && !OwnsItem(pathArr, user.Username, false))
             throw new FileSystemException("Unauthorized");
         if (File.Exists(oldPath) && !OwnsItem(pathArr, user.Username, true))
@@ -304,7 +365,7 @@ public class FileSystemService : IFileSystemService
         try
         {
             
-            path = Path.Join(_config["DirectoryRootPath"], string.Join('/', pathArr));
+            path = Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', pathArr));
         }
         catch
         {
@@ -337,12 +398,28 @@ public class FileSystemService : IFileSystemService
         {
             pathArr[i] = Utils.CleanString(pathArr[i]);
         }
+
+        var parentDir = pathArr.Take(pathArr.Length - 1).ToArray();
+        MetaFileModel meta;
+
+        try
+        {
+            meta = GetMeta(Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', parentDir)));
+        }
+        catch (FileSystemException e)
+        {
+            throw;
+        }
+        
+
+        if (meta.Owner != user.Username && !meta.AnyCanUpload) throw new FileSystemException("Unauthorized");
+        
         if (file.FileName == "fsmeta.json") throw new FileSystemException("Unauthorized");
         string path = "";
         try
         {
             
-            path = Path.Join(_config["DirectoryRootPath"], string.Join('/', pathArr));
+            path = Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', pathArr));
         }
         catch
         {
@@ -360,6 +437,64 @@ public class FileSystemService : IFileSystemService
 
     public void ChangeItemVisibility(string[] pathArr, string visibility)
     {
+        var itemName = pathArr[^1];
+        var parentDir = pathArr.Take(pathArr.Length - 1).ToArray();
+        MetaFileModel meta;
+        try
+        {
+            meta = GetMeta(Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', parentDir)));
+        }
+        catch (FileSystemException e)
+        {
+            throw;
+        }
+            
+
+        if (Directory.Exists(Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', pathArr))))
+        {
+            ItemMeta dirMeta = meta.Directories.First(x => x.Name == itemName);
+            dirMeta.Visibility = visibility;
+            
+        } else if (File.Exists(Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', pathArr))))
+        {
+            ItemMeta fileMeta = meta.Files.First(x => x.Name == itemName);
+            fileMeta.Visibility = visibility;
+        }
+        else
+        {
+            throw new FileSystemException("Couldn't find item");
+        }
+        
+        File.WriteAllText(Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', parentDir), "fsmeta.json"),
+            string.Empty);
+        var stream = File.OpenWrite(Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', parentDir), "fsmeta.json"));
+        stream.Write(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(meta, new JsonSerializerOptions(){WriteIndented = true})));
+        stream.Close();
+        stream.Dispose();
+    }
+
+    public void ChangePublicUploading(string[] pathArr, bool anyoneCanUpload)
+    {
+        var path = Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', pathArr));
+        MetaFileModel meta;
+
+        try
+        {
+            meta = GetMeta(path);
+        }
+        catch (FileSystemException e)
+        {
+            throw new FileSystemException(e.Message);
+        }
+
+        meta.AnyCanUpload = anyoneCanUpload;
+        
+        File.WriteAllText(Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', pathArr), "fsmeta.json"),
+            string.Empty);
+        var stream = File.OpenWrite(Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', pathArr), "fsmeta.json"));
+        stream.Write(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(meta, new JsonSerializerOptions(){WriteIndented = true})));
+        stream.Close();
+        stream.Dispose();
         
     }
 
@@ -368,7 +503,18 @@ public class FileSystemService : IFileSystemService
         List<string> t = pathArr.ToList();
         t.RemoveAt(t.Count - 1);
         string[] newArr = t.ToArray();
-        var meta = GetMeta(Path.Join(_config["DirectoryRootPath"], string.Join('/', newArr)));
+        
+        MetaFileModel meta;
+
+        try
+        {
+            meta = GetMeta(Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', newArr)));;
+        }
+        catch (FileSystemException e)
+        {
+            throw new FileSystemException(e.Message);
+        }
+        
         var fileMeta = meta.Files.First(x => x.Name == pathArr[^1]);
         if (fileMeta.Owner == user?.Username || fileMeta.Visibility != "private") return true;
         return false;
@@ -377,8 +523,19 @@ public class FileSystemService : IFileSystemService
     private bool OwnsItem(string[] pathArr, string Owner, bool isFile)
     {
         string[] parentPath = pathArr.Take(pathArr.Length - 1).ToArray();
+
+
+        MetaFileModel meta;
+
+        try
+        {
+            meta = GetMeta(Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', parentPath)));
+        }
+        catch (FileSystemException e)
+        {
+            throw;
+        }
         
-        var meta = GetMeta(Path.Join(_config["DirectoryRootPath"], string.Join('/', parentPath)));
         if (isFile)
         {
             return meta.Files.First(x => x.Name == pathArr[^1]).Owner == Owner;
@@ -403,7 +560,17 @@ public class FileSystemService : IFileSystemService
     private void AddMeta(string[] itemPath, bool isFile, string Owner)
     {
         string[] parentPath = itemPath.Take(itemPath.Length - 1).ToArray();
-        var meta = GetMeta(Path.Join(_config["DirectoryRootPath"], string.Join('/', parentPath)));
+
+        MetaFileModel meta;
+
+        try
+        {
+            meta = GetMeta(string.Join('/', parentPath));
+        }
+        catch (FileSystemException e)
+        {
+            throw;
+        }
         
         var fileMeta = new ItemMeta()
         {
@@ -420,9 +587,8 @@ public class FileSystemService : IFileSystemService
             meta.Directories = meta.Directories.Append(fileMeta).ToArray();
         }
 
-        File.WriteAllText(Path.Join(_config["DirectoryRootPath"], string.Join('/', parentPath), "fsmeta.json"),
-            string.Empty);
-        var stream = File.OpenWrite(Path.Join(_config["DirectoryRootPath"], string.Join('/', parentPath), "fsmeta.json"));
+        File.WriteAllText( Path.Join(string.Join('/', parentPath), "fsmeta.json"), string.Empty);
+        var stream = File.OpenWrite(Path.Join(string.Join('/', parentPath), "fsmeta.json"));
         stream.Write(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(meta, new JsonSerializerOptions(){WriteIndented = true})));
         stream.Close();
         stream.Dispose();
@@ -431,7 +597,18 @@ public class FileSystemService : IFileSystemService
     private void RemoveMeta(string[] itemPath, bool isFile)
     {
         string[] parentPath = itemPath.Take(itemPath.Length - 1).ToArray();
-        var meta = GetMeta(Path.Join(_config["DirectoryRootPath"], string.Join('/', parentPath)));
+
+        MetaFileModel meta;
+
+        try
+        {
+            meta = GetMeta(Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', parentPath)));
+        }
+        catch (FileSystemException e)
+        {
+            throw;
+        }
+        
         if (isFile)
         {
             meta.Files = meta.Files.Where(x => x.Name != itemPath[^1]).ToArray();
@@ -440,12 +617,90 @@ public class FileSystemService : IFileSystemService
         {
             meta.Directories = meta.Directories.Where(x => x.Name != itemPath[^1]).ToArray();
         }
-        File.WriteAllText(Path.Join(_config["DirectoryRootPath"], string.Join('/', parentPath), "fsmeta.json"),
+        File.WriteAllText(Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', parentPath), "fsmeta.json"),
             string.Empty);
-        var stream = File.OpenWrite(Path.Join(_config["DirectoryRootPath"], string.Join('/', parentPath), "fsmeta.json"));
+        var stream = File.OpenWrite(Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', parentPath), "fsmeta.json"));
         stream.Write(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(meta, new JsonSerializerOptions(){WriteIndented = true})));
         stream.Close();
         stream.Dispose();
+    }
+
+    private string GetFileOwner(string[] pathArr)
+    {
+        var parentDir = pathArr.Take(pathArr.Length - 1).ToArray();
+        var path = Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', parentDir));
+        MetaFileModel meta;
+
+        try
+        {
+            meta = GetMeta(path);
+        }
+        catch (FileSystemException e)
+        {
+            throw;
+        }
+
+        var file = meta.Files.First(x => x.Name == pathArr[^1]);
+        return file.Owner;
+    }
+
+    private string GetDirectoryOwner(string[] pathArr)
+    {
+        var path = Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', pathArr));
+
+        MetaFileModel meta;
+
+        try
+        {
+            meta = GetMeta(path);
+        }
+        catch (FileSystemException e)
+        {
+            throw;
+        }
+        
+        return meta.Owner;
+    }
+
+    private string GetItemVisibility(string[] pathArr, bool isDirectory)
+    {
+        if (isDirectory)
+        {
+            var parentDir = pathArr.Take(pathArr.Length - 1).ToArray();
+            var path = Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', parentDir));
+            
+            MetaFileModel meta;
+
+            try
+            {
+                meta = GetMeta(path);
+            }
+            catch (FileSystemException e)
+            {
+                throw;
+            }
+            
+            var directory = meta.Directories.First(x => x.Name == pathArr[^1]);
+            return directory.Visibility;
+        }
+        else //Resume with get item property endpoint
+        {
+            var parentDir = pathArr.Take(pathArr.Length - 1).ToArray();
+            var path = Path.Join(_generalSettings.DirectoryRootPath, string.Join('/', parentDir));
+            MetaFileModel meta;
+
+            try
+            {
+                meta = GetMeta(path);
+            }
+            catch (FileSystemException e)
+            {
+                throw;
+            }
+            
+            var file = meta.Files.First(x => x.Name == pathArr[^1]);
+            return file.Visibility;
+        }
     }
     private int GetItemCount(string path)
     {

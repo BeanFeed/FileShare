@@ -2,24 +2,23 @@ using DAL.Context;
 using DAL.Entities;
 using FileshareBackend.Exceptions;
 using FileshareBackend.Models;
+using FileshareBackend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace FileshareBackend.Services.Interfaces;
+namespace FileshareBackend.Services;
 
 public class UserService : IUserService
 {
     private readonly FileShareContext _fsContext;
-    private readonly IConfiguration _config;
     private readonly IJwtService _jwtService;
     
-    public UserService(FileShareContext context, IConfiguration config, IJwtService jwtService)
+    public UserService(FileShareContext context, IJwtService jwtService)
     {
         _fsContext = context;
-        _config = config;
         _jwtService = jwtService;
     }
 
-    public async Task<string> Register(UserLoginModel userInfo)
+    public async Task<string[]> Register(UserLoginModel userInfo)
     {
         #region Find User
 
@@ -58,7 +57,7 @@ public class UserService : IUserService
 
         #endregion
     }
-    public async Task<string> Login(UserLoginModel userInfo)
+    public async Task<string[]> Login(UserLoginModel userInfo)
     {
         #region Find User
 
@@ -82,13 +81,25 @@ public class UserService : IUserService
         #endregion
     }
 
-    
+    public async Task<string[]> Refresh(string rToken)
+    {
+        try
+        {
+            var user = await _jwtService.DecodeToken(rToken, true);
+            return _jwtService.EncodeToken(user);
+
+        }
+        catch (UserException e)
+        {
+            throw new UserException(e.Message);
+        }
+    }
 
     public async Task<User> GetMe(string ctx)
     {
         try
         {
-            var user = await _jwtService.DecodeToken(ctx);
+            var user = await _jwtService.DecodeToken(ctx, false);
             user.Passhash = null!;
             return user;
         }
