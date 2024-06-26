@@ -8,5 +8,6 @@ namespace DAL.Entities
         public string Username { get; set; } = null!;
         public long Id { get; set; }
         public string Passhash { get; set; } = null!;
+        public string Role { get; set; } = null!;
     }
 }

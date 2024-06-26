@@ -9,7 +9,7 @@ import {onMounted, ref} from "vue";
 </script>
 
 <template>
-  <div class="fixed left-0 top-0 w-screen h-screen bg-black bg-opacity-50 flex items-center justify-center">
+  <div class="fixed left-0 top-0 w-screen h-screen bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="bg-slate-900 rounded-lg px-3 py-3 text-center">
       <p>{{promptMessage}}</p>
       <div class="my-3 px-2 py-1 bg-slate-850 rounded-2xl">

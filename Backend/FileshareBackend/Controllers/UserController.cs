@@ -111,6 +111,28 @@ public class UserController : ControllerBase
         
         return Ok(new ResponseModel<string>(true, "User signed out"));
     }
+
+    [HttpPost]
+    public async Task<IActionResult> ChangePassword(ChangePasswordModel passwordModel)
+    {
+        if (Request.Cookies["fsAuth"] == null) return BadRequest(new ResponseModel<string>(false, "Session Expired"));
+        try
+        {
+            User user = await _userService.GetMe(Request.Cookies["fsAuth"]!);
+
+            passwordModel.IsAdmin = user.Role == "admin";
+
+            await _userService.ChangePassword(passwordModel);
+
+            return Ok(new ResponseModel<string>(true, "Password changed"));
+        }
+        catch (UserException e)
+        {
+            return BadRequest(new ResponseModel<string>(false, e.Message));
+        }
+        
+    }
+    
 /*
     [HttpGet]
     public async Task<IActionResult> Refresh(string? action, string? controller)

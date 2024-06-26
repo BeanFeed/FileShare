@@ -81,6 +81,36 @@ public class UserService : IUserService
         #endregion
     }
 
+    public async Task ChangePassword(ChangePasswordModel passwordModel)
+    {
+        #region Find User
+
+        User? existingUser = await _fsContext.Users.Where(x => x.Username.ToLower() == passwordModel.Username.ToLower())
+            .FirstOrDefaultAsync();
+
+        if (existingUser is null) throw new UserException("User not found");
+
+        #endregion
+        
+        #region Check Password
+
+        if (!BCrypt.Net.BCrypt.Verify(passwordModel.OldPassword, existingUser.Passhash)) throw new UserException("Invalid Password");
+
+        #endregion
+
+        #region Change Password
+
+        if (passwordModel.NewPassword != passwordModel.Retype) throw new UserException("Passwords do not match");
+
+        existingUser.Passhash = BCrypt.Net.BCrypt.HashPassword(passwordModel.NewPassword);
+
+        _fsContext.Users.Update(existingUser);
+
+        await _fsContext.SaveChangesAsync();
+
+        #endregion
+    }
+
     public async Task<string[]> Refresh(string rToken)
     {
         try

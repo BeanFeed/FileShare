@@ -12,7 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 builder.Services.Configure<GeneralSettings>(builder.Configuration.GetSection("GeneralSettings"));
-var myCors = "cors";
+builder.Services.Configure<FrontendSettings>(builder.Configuration.GetSection("FrontendSettings"));
+
 var config = builder.Configuration;
 Utils.InitiateMeta(config);
 builder.Services.AddCors(options =>
@@ -44,27 +45,6 @@ builder.Services.AddDbContext<FileShareContext>(o=>
     o.UseSqlite(builder.Configuration.GetValue<string>("GeneralSettings:DatabaseConnectionString"))
 );
 
-
-/*
-builder.Services.AddAuthentication("cookie")
-    .AddCookie("cookie")
-    .AddOAuth("custom", o =>
-    {
-        o.SignInScheme = "cookie";
-
-        o.ClientId = "x";
-        o.ClientSecret = "x";
-
-        o.AuthorizationEndpoint = "<link>/oauth/authorize";
-        o.TokenEndpoint = "<link>/oauth/token";
-        o.CallbackPath = "/oauth/custom-cb";
-
-        o.UsePkce = true;
-        o.ClaimActions.MapJsonKey("sub", "sub");
-        
-        // o.Events.OnCreatingTicket
-    });
-*/
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = int.MaxValue;
@@ -78,9 +58,6 @@ builder.Services.Configure<KestrelServerOptions>(options =>
 builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
-
-
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -91,7 +68,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors();
-
+/*
 app.Use((context, next) =>
 {
     context.Response.Headers["Access-Control-Allow-Origin"] = "http://localhost:5173";
@@ -99,7 +76,7 @@ app.Use((context, next) =>
     context.Response.Headers["Access-Control-Allow-Headers"] = "*";
     return next();
 });
-
+*/
 
 app.MapControllers();
 

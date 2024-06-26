@@ -29,6 +29,10 @@ namespace DAL.Context
 
                 entity.Property(e => e.Passhash).HasColumnName("passhash");
 
+                entity.Property(e => e.Role)
+                    .HasColumnName("role")
+                    .HasDefaultValueSql("'member'");
+
                 entity.Property(e => e.Username).HasColumnName("username");
             });
 

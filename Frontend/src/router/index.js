@@ -4,6 +4,8 @@ import Explorer from "../views/Explorer.vue";
 import Login from "../views/Login.vue";
 import Register from "../views/Register.vue";
 import { CanRegister } from "../config.json"
+import Account from "../views/Settings/Account.vue";
+import Settings from "../views/Settings/Settings.vue";
 
 const routes = [
     {
@@ -31,6 +33,17 @@ const routes = [
         path: "/Login",
         component: Login,
         name: "Login"
+    },
+    {
+        path:"/Settings",
+        component: Settings,
+        name: "Settings",
+        children: [
+            {
+                path:"Account",
+                component: Account
+            }
+        ]
     }
 ];
 console.log(CanRegister)
@@ -44,7 +57,7 @@ if(CanRegister === true) {
     routes[routes.length] = {
         path: "/Register",
         redirect: to => {
-            return { name: "Explorer" }
+            return { name: "Home" }
         }
     };
 }
