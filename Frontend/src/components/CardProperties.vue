@@ -3,7 +3,7 @@ import {ref, watchEffect} from "vue";
 import axios from "axios";
 import Config from "../config.json";
 import {useRoute} from "vue-router";
-import {store} from "../state/state.js";
+import {store} from "../store/state.js";
 const route = useRoute();
 let props = defineProps(["defName","isDir"])
 defineEmits(['save'])
@@ -16,7 +16,6 @@ let data = {};
 watchEffect(async () => {
   
   dPath.value = route.params.Directory === undefined ? [] : route.params.Directory;
-  console.log(text.value.length);
   if(props.isDir !== null){
     
     let newPath = [...dPath.value];
@@ -58,8 +57,6 @@ async function DeleteItem() {
     withCredentials: true
   }).then(async function (res) {
     if (res.status === 200 && res.data.success === true) {
-      
-      console.log(res.data.message)
       store.cardPropertyEdit = null;
     }
   }).catch();
@@ -78,7 +75,6 @@ async function SaveProperties() {
     } else {
       oldPath[oldPath.length] = text.value;
     }
-    //console.log(oldPath)
     let nameData = {
       itemPath: oldPath,
       newName: text.value

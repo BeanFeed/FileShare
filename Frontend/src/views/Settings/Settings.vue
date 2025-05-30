@@ -1,6 +1,19 @@
 <script setup>
-
 import SelectionTab from "../../components/AccountSettings/SelectionTab.vue";
+import {onMounted, watch} from "vue";
+import {store, userInfoStore} from "../../store/state.js";
+import {router} from "../../router/index.js";
+
+let userStore = userInfoStore();
+
+onMounted(() => {
+  if (userStore.user == null) router.push("/Login");
+});
+
+watch(userStore.user, () => {
+  if (userStore.user == null) router.push("/Login");
+})
+
 </script>
 
 <template>

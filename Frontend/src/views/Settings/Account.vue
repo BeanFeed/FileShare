@@ -1,6 +1,10 @@
 <script setup>
-import {store} from "../../state/state.js";
-import {onMounted, ref, watch} from "vue";
+import {store, userInfoStore} from "../../store/state.js";
+import {BackendUrl} from "../../config.json";
+import {onMounted, ref} from "vue";
+import axios from "axios";
+
+let userStore = userInfoStore();
 
 let user = ref({
   username: "",
@@ -12,12 +16,22 @@ let oldInput = ref();
 let newInput = ref();
 let retype = ref();
 
-watch(store, () => {
-  user.value = store.user
-});
+onMounted(() => {
+  user.value = userStore.user;
+})
 
 function ChangePassword() {
-  console.log("ChangePassword");
+  let data = {
+    username: user.value.username,
+    oldPassword: oldInput.value,
+    newPassword: newInput.value,
+    retype: newInput.value
+  }
+  
+  let req = axios.post(BackendUrl + "v1/User/ChangePassword", data, {withCredentials: true})
+      .then((res) => {
+        
+      }).catch(() => {})
 }
 
 </script>

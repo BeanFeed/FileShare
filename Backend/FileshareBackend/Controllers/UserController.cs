@@ -15,18 +15,23 @@ public class UserController : ControllerBase
     //private readonly IConfiguration _config;
     private readonly JwtSettings _jwtSettings;
     private readonly IUserService _userService;
+    private readonly FrontendSettings _frontendSettings;
     
-    public UserController(IConfiguration config, IUserService userService, IOptions<JwtSettings> jwtSettings)
+    public UserController(IConfiguration config, IUserService userService, IOptions<JwtSettings> jwtSettings, IOptions<FrontendSettings> frontendSettings)
     {
         //_config = config;
         _jwtSettings = jwtSettings.Value;
         _userService = userService;
+        _frontendSettings = frontendSettings.Value;
     }
 
     [HttpPost]
     public async Task<IActionResult> Register([FromBody]UserLoginModel userInfo)
     {
-        
+        if (!_frontendSettings.AllowNewAccounts)
+        {
+            return BadRequest(new ResponseModel<string>(false, "Cannot register new accounts"));
+        }
         
         try
         {

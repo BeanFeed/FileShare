@@ -1,6 +1,6 @@
 <script setup>
 import NavBar from "./components/NavBar.vue";
-import {store} from "./state/state.js";
+import {store} from "./store/state.js";
 
 </script>
 

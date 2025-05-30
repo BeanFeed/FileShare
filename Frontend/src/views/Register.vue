@@ -10,7 +10,6 @@ var route = useRoute()
 
 function sendLoginPost() {
   if (route.query.returnUrl === undefined) {
-    console.log("Redirect Failed")
     return;
   }
 

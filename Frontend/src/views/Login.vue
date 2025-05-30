@@ -3,7 +3,6 @@ import {useRoute, useRouter} from "vue-router";
 import {BackendUrl} from "../config.json";
 import {ref} from "vue";
 import axios from "axios";
-import {store} from "../state/state.js";
 
 var username = ref();
 var password = ref();
@@ -17,15 +16,12 @@ function sendLoginPost() {
     password: password.value
   }, {withCredentials: true}).then((res) => {
     if (res.data.success) {
-      console.log(route.query.returnUrl)
-      if (route.query.returnUrl === undefined)
-        console.log(route.query.returnUrl)
-        window.location.href = window.location.origin;
+      if (typeof route.query.returnUrl != "string") {
+        router.push("/Home")
       } else {
-        console.log(route.query.returnUrl)
-        console.log("Redirect")
-        window.location.href = decodeURI(route.query.returnUrl);
+        router.push(route.query.returnUrl)
       }
+    }
   }).catch(() => {
     
   });

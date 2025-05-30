@@ -5,7 +5,7 @@ import DirectoryCard from "../components/DirectoryCard.vue";
 import Config from "../config.json";
 import axios from "axios";
 import FileCard from "../components/FileCard.vue";
-import {store} from "../state/state.js";
+import {store} from "../store/state.js";
 import TextPrompt from "../components/TextPrompt.vue";
 import CardProperties from "../components/CardProperties.vue";
 const dPath = ref();
@@ -38,14 +38,12 @@ watch(store.cardPropertyEdit, async () =>{
 });
 
 onMounted(async () => {
-  console.log('mounted')
   
   await updateScreen()
 })
 
 async function updateScreen() {
   gettingData.value = "pending"
-  console.log(Config.BackendUrl + "v1/filesystem/getfromdirectory" + GetUrlArray("pathArr", dPath.value))
   let req = await axios({
     method: "GET",
     url: Config.BackendUrl + "v1/filesystem/getfromdirectory" + GetUrlArray("pathArr", dPath.value),
@@ -58,7 +56,6 @@ async function updateScreen() {
           directories.value = res.data.message.directories;
           files.value = res.data.message.files;
           store.canEdit = res.data.message.canEdit
-          console.log(directories)
           updateCount += 1;
         }
       }).catch(res => {});
@@ -99,7 +96,6 @@ function MoveDir(data, id) {
 let toBeRenamed = ref(-1);
 let toBeRenamedType = ref('dir');
 function MoveFile(data, id) {
-  console.log(dPath.value)
   
   held.value.id = id;
   held.value.name = data.name;
@@ -107,7 +103,6 @@ function MoveFile(data, id) {
   held.value.show = true;
   held.value.type = "file";
   store.cardHeld = true;
-  console.log(held.value.path)
 }
 
 async function DropCard() {
@@ -136,12 +131,9 @@ async function DropCard() {
       withCredentials: true
     }).then(async function (res) {
       if (res.status === 200 && res.data.success === true) {
-
-        console.log(res.data.message)
         await updateScreen();
       }
     }).catch(res => {
-      console.log(res.response)
     })
   }
   
@@ -163,7 +155,7 @@ async function RenameItem(oldName, newName) {
   } else {
     oldPath[oldPath.length] = toBeRenamed.value;
   }
-  //console.log(oldPath)
+
   let data = {
     itemPath: oldPath,
     newName: newName
@@ -173,8 +165,6 @@ async function RenameItem(oldName, newName) {
     withCredentials: true
   }).then(async function (res) {
     if (res.status === 200 && res.data.success === true) {
-
-      console.log(res.data.message)
       await updateScreen();
     }
   }).catch();
@@ -185,7 +175,6 @@ async function RenameItem(oldName, newName) {
 let uploadProgress = ref(0);
 let uploading = ref(false);
 function ProgressUpdate(data) {
-  console.log(data);
   uploadProgress.value = data.progress;
 }
 async function UploadItem(name) {
@@ -194,7 +183,6 @@ async function UploadItem(name) {
   let file = name !== null ? renameFile(store.uploadedFile, name) : store.uploadedFile;
   formData.append("File", file);
   formData.append("Path", path);
-  console.log(name)
   uploading.value = true;
   let req = await axios.post(Config.BackendUrl + "v1/filesystem/uploadfile", formData, {
     headers: {
@@ -203,7 +191,6 @@ async function UploadItem(name) {
     onUploadProgress: progressEvent => ProgressUpdate(progressEvent),
     withCredentials: true
   }).then(async function (res) {
-    console.log(res.data.message);
     store.uploadedFile = null;
     uploadProgress.value = 0;
     uploading.value = false;
@@ -217,7 +204,6 @@ async function DownloadItem(name) {
   path[path.length] = name;
   let req = await axios.get(Config.BackendUrl + "v1/filesystem/downloadfile" + GetUrlArray("pathArr" ,path) + "&raw=false", {withCredentials: true})
       .then(function (res) {
-        console.log(res);
         ForceFileDownload(res, name);
       }).catch(res => {});
 }

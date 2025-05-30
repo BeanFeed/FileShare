@@ -10,7 +10,6 @@ const name = ref(props.dirName)
 defineEmits(['openProperties','moveCard'])
 watchEffect(() => {
   dPath.value = route.params.Directory;
-  console.log(dPath.value)
 })
 
 if (name.value.length > 16) {

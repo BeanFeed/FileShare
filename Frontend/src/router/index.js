@@ -38,6 +38,7 @@ const routes = [
         path:"/Settings",
         component: Settings,
         name: "Settings",
+        redirect: "/Settings/Account",
         children: [
             {
                 path:"Account",
@@ -46,7 +47,6 @@ const routes = [
         ]
     }
 ];
-console.log(CanRegister)
 if(CanRegister === true) {
     routes[routes.length] = {
         path: "/Register",
@@ -61,7 +61,6 @@ if(CanRegister === true) {
         }
     };
 }
-console.log(routes)
 
 export const router = createRouter({
     history: createWebHistory(),
